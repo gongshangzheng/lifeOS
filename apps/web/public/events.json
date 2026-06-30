@@ -1,0 +1,60 @@
+{
+  "events": [
+    {
+      "id": "evt-20260701-0900-dsp",
+      "title": "复习数字信号处理",
+      "date": "2026-07-01",
+      "startTime": "09:00",
+      "endTime": "19:00",
+      "location": "工位",
+      "category": "study",
+      "description": "数字信号处理复习（含午休）"
+    },
+    {
+      "id": "evt-20260701-1900-practice",
+      "title": "刷题",
+      "date": "2026-07-01",
+      "startTime": "19:00",
+      "endTime": "22:00",
+      "location": "工位",
+      "category": "study",
+      "description": "刷题训练"
+    }
+  ],
+  "recurring": [
+    {
+      "id": "recur-run-daily",
+      "title": "跑步 6km",
+      "pattern": "daily",
+      "startTime": "06:30",
+      "endTime": "07:15",
+      "location": "",
+      "category": "health",
+      "description": "每日跑步 6 千米",
+      "activeFrom": "2026-06-01",
+      "activeUntil": null,
+      "excludeDates": []
+    },
+    {
+      "id": "recur-gym",
+      "title": "健身房",
+      "pattern": "every-3-days",
+      "startTime": "18:00",
+      "endTime": "19:30",
+      "location": "健身房",
+      "category": "health",
+      "description": "每 2-3 天去一次健身房",
+      "activeFrom": "2026-06-01",
+      "activeUntil": null,
+      "excludeDates": []
+    }
+  ],
+  "categories": {
+    "study": { "label": "学习", "color": "#3b82f6" },
+    "health": { "label": "健康", "color": "#22c55e" },
+    "work": { "label": "工作", "color": "#f59e0b" },
+    "social": { "label": "社交", "color": "#ec4899" },
+    "life": { "label": "生活", "color": "#8b5cf6" },
+    "other": { "label": "其他", "color": "#6b7280" }
+  }
+}
