@@ -53,6 +53,10 @@
   .lo-calendar .fc-theme-standard .fc-scrollgrid {
     @apply border-border;
   }
+  .lo-calendar .fc-scrollgrid-section-header th,
+  .lo-calendar .fc-col-header-cell {
+    @apply bg-card;
+  }
   .lo-calendar th.fc-col-header-cell-cushion {
     @apply px-2 py-2 text-xs font-medium uppercase tracking-wider text-dim;
   }
@@ -71,6 +75,42 @@
   }
   .lo-calendar td.fc-day-disabled {
     @apply bg-muted text-placeholder;
+  }
+  .lo-calendar .fc-daygrid-body,
+  .lo-calendar .fc-daygrid-day-frame,
+  .lo-calendar .fc-daygrid-day-top {
+    @apply bg-card;
+  }
+  .lo-calendar .fc-daygrid-day-events {
+    @apply bg-card;
+  }
+
+  /* Time grid — force dark surfaces */
+  .lo-calendar .fc-timegrid-body,
+  .lo-calendar .fc-timegrid-col,
+  .lo-calendar .fc-timegrid-col-frame,
+  .lo-calendar .fc-timegrid-col-bg,
+  .lo-calendar .fc-timegrid-slots,
+  .lo-calendar .fc-timegrid-axis,
+  .lo-calendar .fc-timegrid-slot,
+  .lo-calendar .fc-timegrid-slot-lane,
+  .lo-calendar .fc-timegrid-slot-minor,
+  .lo-calendar .fc-timegrid-col-events {
+    @apply bg-card;
+  }
+  .lo-calendar .fc-timegrid-slot-label,
+  .lo-calendar .fc-timegrid-axis-frame,
+  .lo-calendar .fc-timegrid-axis-cushion {
+    @apply bg-card text-dim;
+  }
+  .lo-calendar .fc-timegrid-col.fc-day-today {
+    @apply bg-primary-subtle;
+  }
+  .lo-calendar .fc-timegrid-now-indicator-line {
+    @apply border-primary;
+  }
+  .lo-calendar .fc-timegrid-now-indicator-arrow {
+    @apply border-primary;
   }
 
   /* ---------- Events ----------------------------------------- */
@@ -107,11 +147,14 @@
     @apply text-body;
   }
 
-  /* Timegrid axis & slots */
-  .lo-calendar .fc-timegrid-now-indicator-line {
-    @apply border-primary;
+  /* Popover (more events) */
+  .lo-calendar .fc-popover {
+    @apply rounded-md border border-border bg-card shadow-lg;
   }
-  .lo-calendar .fc-timegrid-now-indicator-arrow {
-    @apply border-primary;
+  .lo-calendar .fc-popover-header {
+    @apply bg-muted text-heading;
+  }
+  .lo-calendar .fc-popover-body {
+    @apply bg-card text-body;
   }
 }

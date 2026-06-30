@@ -21,11 +21,18 @@ export function CalendarPage() {
       <div className="lo-card lo-calendar p-2">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-          initialView="dayGridMonth"
+          initialView="timeGridThreeDay"
+          views={{
+            timeGridThreeDay: {
+              type: 'timeGrid',
+              duration: { days: 3 },
+              buttonText: '3日',
+            },
+          }}
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
+            right: 'dayGridMonth,timeGridWeek,timeGridThreeDay,timeGridDay,listWeek',
           }}
           buttonText={{
             today: '今天',
