@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && velite build && vite build",
+    "build": "velite build && tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "velite build && tsc -b --noEmit",
     "content:build": "velite build"
   },
   "dependencies": {
