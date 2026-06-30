@@ -42,6 +42,8 @@ export default defineConfig({
     annual: report('annual', '2-annual/**/*.md'),
     vision: report('vision', '1-vision/**/*.md'),
     appendix: report('appendix', 'appendix/**/*.md'),
+    topics: report('topics', 'topics/**/*.md'),
+    resume: report('resume', 'resume.md'),
   },
   mdx: {},
   markdown: {

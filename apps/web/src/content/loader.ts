@@ -6,6 +6,8 @@ import {
   annual,
   vision,
   appendix,
+  topics,
+  resume,
   type daily as Daily,
   type weekly as Weekly,
   type monthly as Monthly,
@@ -13,6 +15,8 @@ import {
   type annual as Annual,
   type vision as Vision,
   type appendix as Appendix,
+  type topics as Topics,
+  type resume as Resume,
 } from './.velite'
 
 const byDateDesc = <T extends { date?: string | undefined }>(a: T, b: T) => {
@@ -24,7 +28,7 @@ const byDateDesc = <T extends { date?: string | undefined }>(a: T, b: T) => {
 const findBySlug = <T extends { slug: string }>(items: readonly T[], slug: string) =>
   items.find((it) => it.slug === slug)
 
-export type { Daily, Weekly, Monthly, Quarterly, Annual, Vision, Appendix }
+export type { Daily, Weekly, Monthly, Quarterly, Annual, Vision, Appendix, Topics, Resume }
 
 export const getAllDaily = (): Daily[] => [...daily].sort(byDateDesc)
 export const getDailyBySlug = (slug: string): Daily | undefined => findBySlug(daily, slug)
@@ -48,3 +52,8 @@ export const getVisionBySlug = (slug: string): Vision | undefined => findBySlug(
 export const getAllAppendix = (): Appendix[] => [...appendix].sort(byDateDesc)
 export const getAppendixBySlug = (slug: string): Appendix | undefined =>
   findBySlug(appendix, slug)
+
+export const getAllTopics = (): Topics[] => [...topics].sort(byDateDesc)
+export const getTopicBySlug = (slug: string): Topics | undefined => findBySlug(topics, slug)
+
+export const getResume = (): Resume | undefined => resume[0]

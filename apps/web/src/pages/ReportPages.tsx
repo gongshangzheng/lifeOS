@@ -16,6 +16,8 @@ import {
   getVisionBySlug,
   getAllAppendix,
   getAppendixBySlug,
+  getAllTopics,
+  getTopicBySlug,
 } from '@/content/loader'
 
 type CollectionConfig<Slug extends string = string> = {
@@ -86,6 +88,14 @@ const COLLECTIONS = {
     listLoader: getAllAppendix,
     detailLoader: getAppendixBySlug,
   },
+  topics: {
+    label: 'Topics',
+    description: '生活随笔、书单、灵感与杂项。',
+    basePath: '/topics',
+    empty: '还没有随笔。',
+    listLoader: getAllTopics,
+    detailLoader: getTopicBySlug,
+  },
 } as const satisfies Record<string, CollectionConfig>
 
 type CollectionKey = keyof typeof COLLECTIONS
@@ -147,3 +157,5 @@ export const VisionList = makeListPage('vision')
 export const VisionDetail = makeDetailPage('vision')
 export const AppendixList = makeListPage('appendix')
 export const AppendixDetail = makeDetailPage('appendix')
+export const TopicsList = makeListPage('topics')
+export const TopicsDetail = makeDetailPage('topics')
