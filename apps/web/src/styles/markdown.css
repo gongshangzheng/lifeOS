@@ -1,0 +1,120 @@
+/* ============================================================
+   Markdown body — typography for .md-body
+   ============================================================
+   Pure-token styles: every value resolves through a @theme variable
+   so light / dark mode flips without writing parallel rule sets.
+   ============================================================ */
+
+@layer components {
+  /* ---------- Paragraphs & emphasis ---------------------------- */
+  .md-body p {
+    @apply my-3 text-body;
+  }
+  .md-body strong {
+    @apply font-semibold text-heading;
+  }
+  .md-body em {
+    @apply italic text-heading;
+  }
+
+  /* ---------- Headings ---------------------------------------- */
+  .md-body h1,
+  .md-body h2,
+  .md-body h3,
+  .md-body h4,
+  .md-body h5,
+  .md-body h6 {
+    @apply mt-7 mb-2 font-semibold tracking-tight text-heading;
+  }
+  .md-body h1 {
+    @apply text-2xl;
+  }
+  .md-body h2 {
+    @apply text-xl border-b border-border pb-1.5;
+  }
+  .md-body h3 {
+    @apply text-lg;
+  }
+  .md-body h4 {
+    @apply text-base;
+  }
+
+  /* ---------- Lists -------------------------------------------- */
+  .md-body ul,
+  .md-body ol {
+    @apply my-3 pl-6;
+  }
+  .md-body ul {
+    @apply list-disc;
+  }
+  .md-body ol {
+    @apply list-decimal;
+  }
+  .md-body li {
+    @apply my-1 text-body;
+  }
+  .md-body li > p {
+    @apply my-1;
+  }
+  .md-body li > ul,
+  .md-body li > ol {
+    @apply my-1;
+  }
+  /* GFM task list rows should not show the bullet */
+  .md-body li:has(> input[type="checkbox"]) {
+    @apply list-none -ml-6;
+  }
+
+  /* ---------- Links & blockquotes ------------------------------ */
+  .md-body a {
+    @apply text-primary underline decoration-primary/40 underline-offset-2 transition-colors;
+  }
+  .md-body a:hover {
+    @apply text-primary-hover decoration-primary;
+  }
+  .md-body blockquote {
+    @apply my-4 border-l-2 border-primary/60 bg-primary-subtle px-4 py-1 text-body;
+  }
+  .md-body blockquote p {
+    @apply my-1;
+  }
+
+  /* ---------- Rule -------------------------------------------- */
+  .md-body hr {
+    @apply my-6 border-border;
+  }
+
+  /* ---------- Tables ------------------------------------------ */
+  .md-body table {
+    @apply my-4 w-full border-collapse text-sm;
+  }
+  .md-body thead {
+    @apply bg-muted text-body;
+  }
+  .md-body th,
+  .md-body td {
+    @apply border-b border-border px-3 py-2 text-left align-top;
+  }
+  .md-body th {
+    @apply font-medium text-heading;
+  }
+  .md-body td {
+    @apply text-body;
+  }
+
+  /* ---------- Inline code chips / pre blocks ------------------ */
+  .md-body code {
+    @apply rounded bg-code-bg px-1.5 py-0.5 font-mono text-[0.85em] text-code-fg;
+  }
+  .md-body pre {
+    @apply my-0;
+  }
+  .md-body pre code {
+    @apply bg-transparent p-0 text-heading;
+  }
+
+  /* ---------- Images ------------------------------------------ */
+  .md-body img {
+    @apply my-3 max-w-full rounded-lg border border-border;
+  }
+}

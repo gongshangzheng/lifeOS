@@ -1,0 +1,29 @@
+/* ============================================================
+   Utilities — small shared helpers used in multiple places
+   but too specific to belong in components.css
+   ============================================================ */
+
+@layer utilities {
+  /* Hairline divider used in headers / between sections */
+  .lo-divider {
+    @apply border-b border-border-subtle;
+  }
+
+  /* Status dot (used beside datetime tags) */
+  .lo-dot {
+    @apply inline-block h-1.5 w-1.5 rounded-full bg-primary;
+  }
+
+  /* Text clamp helper (kept explicit so we don't depend on plugin) */
+  .lo-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Quiet hint text used in empty-state rows */
+  .lo-hint {
+    @apply text-sm text-dim;
+  }
+}

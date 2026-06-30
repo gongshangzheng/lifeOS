@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { FileText, ChevronRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { stripMarkdown } from '@/lib/markdown'
 
 export type ReportListItem = {
@@ -33,12 +34,12 @@ export function ReportList({
   return (
     <section className="space-y-4">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">{title}</h1>
-        {description && <p className="text-sm text-zinc-400">{description}</p>}
+        <h1 className="lo-section-title">{title}</h1>
+        {description && <p className="lo-section-desc">{description}</p>}
       </header>
 
       {items.length === 0 ? (
-        <p className="text-zinc-500">{emptyText}</p>
+        <p className="text-dim">{emptyText}</p>
       ) : (
         <ul className="space-y-2">
           {items.map((it) => {
@@ -48,25 +49,25 @@ export function ReportList({
               <li key={it.slug}>
                 <NavLink
                   to={`${basePath}/${it.slug}`}
-                  className="group flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-900/40 p-3 transition-colors hover:border-indigo-500/50 hover:bg-zinc-900"
+                  className={cn(
+                    'lo-card lo-card-hover group flex items-start gap-3 rounded-lg p-3',
+                  )}
                 >
-                  <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-zinc-500 group-hover:text-indigo-300" />
+                  <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-dim group-hover:text-primary" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="truncate font-medium text-zinc-100 group-hover:text-indigo-100">
+                      <span className="truncate font-medium text-heading group-hover:text-primary-hover">
                         {it.title}
                       </span>
                       {date && (
-                        <span className="flex-shrink-0 font-mono text-[11px] text-zinc-500">
+                        <span className="flex-shrink-0 font-mono text-[11px] text-dim">
                           {date}
                         </span>
                       )}
                     </div>
-                    {preview && (
-                      <p className="mt-1 line-clamp-2 text-sm text-zinc-400">{preview}</p>
-                    )}
+                    {preview && <p className="mt-1 line-clamp-2 text-sm text-body">{preview}</p>}
                   </div>
-                  <ChevronRight className="mt-0.5 h-4 w-4 flex-shrink-0 text-zinc-600 group-hover:text-indigo-300" />
+                  <ChevronRight className="mt-0.5 h-4 w-4 flex-shrink-0 text-placeholder group-hover:text-primary" />
                 </NavLink>
               </li>
             )

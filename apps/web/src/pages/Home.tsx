@@ -23,10 +23,10 @@ function getIsoWeekKey(d: Date): string {
 
 function StatCard({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:border-zinc-700">
-      <div className="text-[11px] uppercase tracking-wider text-zinc-500">{label}</div>
-      <div className="mt-1.5 text-xl font-semibold text-zinc-100">{value}</div>
-      {hint && <div className="mt-1 text-[11px] text-zinc-500">{hint}</div>}
+    <div className="lo-card lo-card-hover p-4">
+      <div className="text-[11px] uppercase tracking-wider text-dim">{label}</div>
+      <div className="mt-1.5 text-xl font-semibold text-heading">{value}</div>
+      {hint && <div className="mt-1 text-[11px] text-dim">{hint}</div>}
     </div>
   )
 }
@@ -62,9 +62,9 @@ export function Home() {
 
   return (
     <section className="space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">lifeOS Dashboard</h1>
-      <p className="text-sm text-zinc-500">当前时间</p>
-      <p className="font-mono text-3xl text-zinc-100">
+      <h1 className="lo-section-title">lifeOS Dashboard</h1>
+      <p className="text-sm text-dim">当前时间</p>
+      <p className="font-mono text-3xl text-heading">
         {now.toLocaleString('zh-CN', { hour12: false })}
       </p>
 
@@ -82,16 +82,16 @@ export function Home() {
         {stats.latest ? (
           <Link
             to={`/daily/${stats.latest.slug}`}
-            className="group rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:border-indigo-500/50"
+            className="lo-card lo-card-hover group block p-4 transition-colors hover:border-primary/50"
           >
-            <div className="text-[11px] uppercase tracking-wider text-zinc-500">最新日报</div>
+            <div className="text-[11px] uppercase tracking-wider text-dim">最新日报</div>
             <div className="mt-1.5 flex items-start justify-between gap-2">
-              <span className="line-clamp-2 text-sm font-semibold text-zinc-100 group-hover:text-indigo-200">
+              <span className="lo-clamp-2 text-sm font-semibold text-heading group-hover:text-primary-hover">
                 {stats.latest.title}
               </span>
-              <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-zinc-500 group-hover:text-indigo-300" />
+              <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-dim group-hover:text-primary" />
             </div>
-            <div className="mt-1 font-mono text-[11px] text-zinc-500">
+            <div className="mt-1 font-mono text-[11px] text-dim">
               {stats.latest.date?.slice(0, 10)}
             </div>
           </Link>

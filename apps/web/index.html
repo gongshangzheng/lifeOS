@@ -4,7 +4,32 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/lifeOS/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>lifeOS — personal life operating system</title>
+    <script>
+      // Resolve the initial theme BEFORE the page paints to avoid the
+      // dark-flash on refresh. Order:
+      //   1. user choice persisted in localStorage
+      //   2. system preference via prefers-color-scheme
+      //   3. fall back to dark (lifeOS aesthetic default)
+      (function () {
+        var saved
+        try {
+          saved = window.localStorage.getItem('lifeos.theme')
+        } catch (_) {
+          saved = null
+        }
+        var mode
+        if (saved === 'light' || saved === 'dark') {
+          mode = saved
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          mode = 'dark'
+        } else {
+          mode = 'dark'
+        }
+        if (mode === 'dark') document.documentElement.classList.add('dark')
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

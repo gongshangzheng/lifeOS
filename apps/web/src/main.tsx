@@ -4,8 +4,8 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
-// default to dark mode for lifeOS aesthetic
-document.documentElement.classList.add('dark')
+// Initial theme is resolved by the inline boot script in index.html
+// (before React mounts) so the page never flashes the wrong palette.
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

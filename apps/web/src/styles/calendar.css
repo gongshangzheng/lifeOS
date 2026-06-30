@@ -1,0 +1,117 @@
+/* ============================================================
+   FullCalendar — theme overrides
+   ============================================================
+   FullCalendar ships its own CSS via @fullcalendar packages. We
+   don't import it directly here — Vite bundles it through the
+   component import — but these selectors override its color
+   defaults so the calendar blends with our token system.
+
+   Selectors live inside the calendar route's wrapper which carries
+   the .lo-calendar class so the overrides only apply locally.
+   ============================================================ */
+
+@layer components {
+  /* ---------- Toolbar ---------------------------------------- */
+  .lo-calendar .fc-toolbar.fc-header-toolbar {
+    @apply mb-3;
+  }
+  .lo-calendar .fc-toolbar-title {
+    @apply text-lg font-semibold text-heading;
+  }
+
+  /* ---------- Buttons (today / prev / next / view-switcher) -- */
+  .lo-calendar .fc-button {
+    @apply rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-body shadow-none transition-colors;
+    text-transform: none;
+  }
+  .lo-calendar .fc-button:hover {
+    @apply border-border-subtle bg-muted;
+  }
+  .lo-calendar .fc-button:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+  .lo-calendar .fc-button-primary:not(:disabled).fc-button-active,
+  .lo-calendar .fc-button-primary:not(:disabled):active {
+    @apply border-primary bg-primary text-primary-foreground;
+  }
+  .lo-calendar .fc-button-group {
+    @apply rounded-md;
+  }
+  .lo-calendar .fc-button-group > .fc-button {
+    @apply rounded-none first:rounded-l-md last:rounded-r-md;
+  }
+
+  /* ---------- Table grid --------------------------------------- */
+  .lo-calendar .fc {
+    @apply text-body;
+  }
+  .lo-calendar .fc-scrollgrid {
+    @apply rounded-md border border-border bg-card;
+  }
+  .lo-calendar .fc-theme-standard td,
+  .lo-calendar .fc-theme-standard th,
+  .lo-calendar .fc-theme-standard .fc-scrollgrid {
+    @apply border-border;
+  }
+  .lo-calendar th.fc-col-header-cell-cushion {
+    @apply px-2 py-2 text-xs font-medium uppercase tracking-wider text-dim;
+  }
+
+  /* Day cells */
+  .lo-calendar .fc-daygrid-day-number,
+  .lo-calendar .fc-timegrid-axis-cushion,
+  .lo-calendar .fc-timegrid-slot-label-cushion {
+    @apply text-dim;
+  }
+  .lo-calendar .fc-daygrid-day.fc-day-today {
+    @apply bg-primary-subtle;
+  }
+  .lo-calendar .fc-day-other .fc-daygrid-day-number {
+    @apply text-placeholder;
+  }
+  .lo-calendar td.fc-day-disabled {
+    @apply bg-muted text-placeholder;
+  }
+
+  /* ---------- Events ----------------------------------------- */
+  .lo-calendar .fc-event,
+  .lo-calendar .fc-event-main {
+    @apply rounded-md border border-primary/40 bg-primary-subtle text-primary-subtle-foreground shadow-none;
+  }
+  .lo-calendar .fc-event:hover {
+    @apply bg-primary/30;
+  }
+  .lo-calendar .fc-event-title {
+    @apply text-xs font-medium;
+  }
+
+  /* List view */
+  .lo-calendar .fc-list {
+    @apply rounded-md border border-border bg-card;
+  }
+  .lo-calendar .fc-list-day-cushion {
+    @apply bg-muted;
+  }
+  .lo-calendar .fc-list-day-text,
+  .lo-calendar .fc-list-day-side-text {
+    @apply text-heading;
+  }
+  .lo-calendar .fc-list-event {
+    @apply cursor-pointer rounded-md bg-card;
+  }
+  .lo-calendar .fc-list-event:hover td {
+    @apply bg-muted;
+  }
+  .lo-calendar .fc-list-event-time,
+  .lo-calendar .fc-list-event-title {
+    @apply text-body;
+  }
+
+  /* Timegrid axis & slots */
+  .lo-calendar .fc-timegrid-now-indicator-line {
+    @apply border-primary;
+  }
+  .lo-calendar .fc-timegrid-now-indicator-arrow {
+    @apply border-primary;
+  }
+}

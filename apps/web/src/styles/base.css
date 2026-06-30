@@ -1,0 +1,51 @@
+/* ============================================================
+   Base — global element reset & app shell
+   ============================================================ */
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-body antialiased;
+    font-family: var(--font-sans);
+    transition: background-color 0.18s ease, color 0.18s ease;
+  }
+
+  ::selection {
+    background-color: var(--color-selection);
+    color: var(--color-foreground);
+  }
+
+  /* Scrollbar — subtle, both themes */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: 9999px;
+    border: 2px solid var(--color-background);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-dim);
+  }
+
+  /* Honor user reduced-motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

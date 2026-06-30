@@ -1,0 +1,70 @@
+/* ============================================================
+   Components — shared patterns used across the app
+   ============================================================
+   Each block is one reusable primitive. Tokens (background / border /
+   primary / …) come from variables.css via @theme, so they flip
+   automatically with .dark.
+
+   Convention:
+     .lo-<name>   low-level primitive (card, chip, link)
+   ============================================================ */
+
+@layer components {
+  /* ---------- Card ---------------------------------------------- */
+  .lo-card {
+    @apply rounded-lg border border-border bg-card p-4 text-card-foreground;
+  }
+  .lo-card-hover {
+    @apply transition-colors hover:border-border-subtle hover:bg-muted;
+  }
+
+  /* ---------- Interactive link ---------------------------------- */
+  .lo-link {
+    @apply text-primary underline decoration-primary/40 underline-offset-2 transition-colors;
+  }
+  .lo-link:hover {
+    @apply text-primary-hover decoration-primary;
+  }
+
+  /* ---------- Subtle chip (e.g. badges) ------------------------- */
+  .lo-chip {
+    @apply inline-flex items-center gap-1 rounded-chip px-2 py-0.5 text-xs font-medium;
+  }
+  .lo-chip-primary {
+    @apply bg-primary-subtle text-primary-subtle-foreground;
+  }
+  .lo-chip-muted {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  /* ---------- Inline code chip --------------------------------- */
+  .lo-code {
+    @apply rounded bg-code-bg px-1.5 py-0.5 font-mono text-[0.85em] text-code-fg;
+  }
+
+  /* ---------- Icon button --------------------------------------- */
+  .lo-icon-btn {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors;
+  }
+  .lo-icon-btn:hover {
+    @apply border-primary/50 text-primary;
+  }
+
+  /* ---------- Sticky nav surface ------------------------------- */
+  .lo-nav {
+    @apply sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur;
+  }
+
+  /* ---------- Footer surface ------------------------------------ */
+  .lo-footer {
+    @apply border-t border-border py-4 text-center text-xs text-dim;
+  }
+
+  /* ---------- Section heading ----------------------------------- */
+  .lo-section-title {
+    @apply text-2xl font-semibold tracking-tight text-heading;
+  }
+  .lo-section-desc {
+    @apply text-sm text-dim;
+  }
+}
