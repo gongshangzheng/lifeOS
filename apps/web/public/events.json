@@ -19,6 +19,41 @@
       "location": "工位",
       "category": "study",
       "description": "刷题训练"
+    },
+    {
+      "id": "evt-20260630134913-kdz9yx",
+      "title": "考试",
+      "date": "2026-07-02",
+      "startTime": "15:00",
+      "endTime": "17:30",
+      "category": "study"
+    },
+    {
+      "id": "evt-20260630134914-li3vnq",
+      "title": "红外视频压缩整理",
+      "date": "2026-07-02",
+      "startTime": "19:00",
+      "endTime": "22:00",
+      "location": "工位",
+      "category": "study"
+    },
+    {
+      "id": "evt-20260630134914-8lwn2l",
+      "title": "整理动作检测模型及路线",
+      "date": "2026-07-03",
+      "startTime": "09:00",
+      "endTime": "11:00",
+      "location": "工位",
+      "category": "study"
+    },
+    {
+      "id": "evt-20260630134916-9rkymn",
+      "title": "高级图形学大项目最终报告",
+      "date": "2026-07-03",
+      "startTime": "14:00",
+      "endTime": "17:00",
+      "location": "工位",
+      "category": "study"
     }
   ],
   "recurring": [
@@ -50,11 +85,29 @@
     }
   ],
   "categories": {
-    "study": { "label": "学习", "color": "#3b82f6" },
-    "health": { "label": "健康", "color": "#22c55e" },
-    "work": { "label": "工作", "color": "#f59e0b" },
-    "social": { "label": "社交", "color": "#ec4899" },
-    "life": { "label": "生活", "color": "#8b5cf6" },
-    "other": { "label": "其他", "color": "#6b7280" }
+    "study": {
+      "label": "学习",
+      "color": "#3b82f6"
+    },
+    "health": {
+      "label": "健康",
+      "color": "#22c55e"
+    },
+    "work": {
+      "label": "工作",
+      "color": "#f59e0b"
+    },
+    "social": {
+      "label": "社交",
+      "color": "#ec4899"
+    },
+    "life": {
+      "label": "生活",
+      "color": "#8b5cf6"
+    },
+    "other": {
+      "label": "其他",
+      "color": "#6b7280"
+    }
   }
 }
