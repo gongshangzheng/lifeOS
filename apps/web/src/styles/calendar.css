@@ -112,23 +112,37 @@
   .lo-calendar .fc-timegrid-col.fc-day-today {
     @apply bg-primary-subtle;
   }
-  .lo-calendar .fc-timegrid-now-indicator-line {
-    @apply border-primary;
-  }
-  .lo-calendar .fc-timegrid-now-indicator-arrow {
-    @apply border-primary;
-  }
 
   /* ---------- Events ----------------------------------------- */
   .lo-calendar .fc-event,
   .lo-calendar .fc-event-main {
-    @apply rounded-md border border-primary/40 bg-primary-subtle text-primary-subtle-foreground shadow-none;
+    @apply rounded-md border border-primary/40 bg-primary-subtle shadow-none;
   }
   .lo-calendar .fc-event:hover {
     @apply bg-primary/30;
   }
   .lo-calendar .fc-event-title {
     @apply text-xs font-medium;
+  }
+
+  /* Event state: past / ongoing / future */
+  .lo-calendar .fc-event-past {
+    @apply text-dim opacity-60;
+  }
+  .lo-calendar .fc-event-ongoing {
+    @apply text-white font-semibold;
+  }
+  .lo-calendar .fc-event-future {
+    @apply text-body;
+  }
+
+  /* Now indicator line & arrow */
+  .lo-calendar .fc-timegrid-now-indicator-line {
+    @apply border-2 border-red-500;
+  }
+  .lo-calendar .fc-timegrid-now-indicator-arrow {
+    @apply border-red-500;
+    border-left-color: rgb(239 68 68) !important;
   }
 
   /* List view */

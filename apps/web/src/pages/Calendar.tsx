@@ -122,6 +122,7 @@ export function CalendarPage() {
             }}
             locale="zh-cn"
             firstDay={1}
+            nowIndicator
             events={fcEvents}
             height="auto"
             eventDisplay="block"
@@ -132,8 +133,21 @@ export function CalendarPage() {
             eventContent={(arg) => {
               const cat = arg.event.extendedProps.category as string
               const colors = CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.other
+              const isPast = arg.event.end ? arg.event.end < new Date() : false
+              const isOngoing =
+                !isPast &&
+                arg.event.start &&
+                arg.event.start <= new Date() &&
+                (!arg.event.end || arg.event.end > new Date())
+              const stateClass = isPast
+                ? 'fc-event-past'
+                : isOngoing
+                  ? 'fc-event-ongoing'
+                  : 'fc-event-future'
               return (
-                <div className={`rounded px-1 py-0.5 text-xs ${colors.bg} ${colors.text}`}>
+                <div
+                  className={`rounded px-1 py-0.5 text-xs ${colors.bg} ${stateClass}`}
+                >
                   {arg.event.title}
                 </div>
               )
