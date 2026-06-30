@@ -132,12 +132,15 @@ function makeDetailPage(key: CollectionKey) {
           body: raw.body,
         }
       : undefined
+    // Show events only for daily reports
+    const eventsDate = key === 'daily' && item?.date ? item.date.slice(0, 10) : undefined
     return (
       <ReportDetail
         item={item}
         backTo={cfg.basePath}
         backLabel={`${cfg.label} 列表`}
         notFoundTitle={`未找到 ${cfg.label}`}
+        showEventsForDate={eventsDate}
       />
     )
   }
