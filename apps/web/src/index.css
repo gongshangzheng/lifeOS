@@ -16,6 +16,7 @@ body,
 body {
   @apply bg-white text-zinc-900 antialiased;
   font-family: var(--font-sans);
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 .dark body {
@@ -24,4 +25,148 @@ body {
 
 ::selection {
   @apply bg-indigo-500/30 text-zinc-50;
+}
+
+/* ---------- Markdown body styling (used by MarkdownView) ---------- */
+.md-body p {
+  @apply my-3 text-zinc-200;
+}
+.md-body h1,
+.md-body h2,
+.md-body h3,
+.md-body h4,
+.md-body h5,
+.md-body h6 {
+  @apply mt-7 mb-2 font-semibold tracking-tight text-zinc-50;
+}
+.md-body h1 {
+  @apply text-2xl;
+}
+.md-body h2 {
+  @apply text-xl border-b border-zinc-800 pb-1.5;
+}
+.md-body h3 {
+  @apply text-lg;
+}
+.md-body h4 {
+  @apply text-base text-zinc-100;
+}
+.md-body ul,
+.md-body ol {
+  @apply my-3 pl-6;
+}
+.md-body ul {
+  @apply list-disc;
+}
+.md-body ol {
+  @apply list-decimal;
+}
+.md-body li {
+  @apply my-1 text-zinc-200;
+}
+.md-body li > p {
+  @apply my-1;
+}
+.md-body li > ul,
+.md-body li > ol {
+  @apply my-1;
+}
+/* GFM task list rows should not show the bullet */
+.md-body li:has(> input[type="checkbox"]) {
+  @apply list-none -ml-6;
+}
+.md-body strong {
+  @apply font-semibold text-zinc-50;
+}
+.md-body em {
+  @apply italic text-zinc-100;
+}
+.md-body a {
+  @apply text-indigo-300 underline decoration-indigo-500/40 underline-offset-2;
+  transition: color 0.12s ease;
+}
+.md-body a:hover {
+  @apply text-indigo-200 decoration-indigo-300;
+}
+.md-body blockquote {
+  @apply my-4 border-l-2 border-indigo-500/60 bg-indigo-500/5 px-4 py-1 text-zinc-300;
+}
+.md-body blockquote p {
+  @apply my-1;
+}
+.md-body hr {
+  @apply my-6 border-zinc-800;
+}
+.md-body table {
+  @apply my-4 w-full border-collapse text-sm;
+}
+.md-body thead {
+  @apply bg-zinc-900/70;
+}
+.md-body th,
+.md-body td {
+  @apply border-b border-zinc-800 px-3 py-2 text-left align-top;
+}
+.md-body th {
+  @apply font-medium text-zinc-200;
+}
+.md-body td {
+  @apply text-zinc-300;
+}
+.md-body code {
+  @apply rounded bg-zinc-800/70 px-1.5 py-0.5 font-mono text-[0.85em] text-indigo-200;
+}
+.md-body pre {
+  @apply my-0;
+}
+.md-body pre code {
+  @apply bg-transparent p-0 text-zinc-100;
+}
+.md-body img {
+  @apply my-3 max-w-full rounded-lg border border-zinc-800;
+}
+
+/* Light-mode overrides for markdown body */
+html:not(.dark) .md-body p,
+html:not(.dark) .md-body li {
+  @apply text-zinc-800;
+}
+html:not(.dark) .md-body h1,
+html:not(.dark) .md-body h2,
+html:not(.dark) .md-body h3,
+html:not(.dark) .md-body h4,
+html:not(.dark) .md-body h5,
+html:not(.dark) .md-body h6 {
+  @apply text-zinc-900;
+}
+html:not(.dark) .md-body h2 {
+  @apply border-zinc-200;
+}
+html:not(.dark) .md-body strong {
+  @apply text-zinc-900;
+}
+html:not(.dark) .md-body em {
+  @apply text-zinc-800;
+}
+html:not(.dark) .md-body blockquote {
+  @apply border-indigo-500/60 bg-indigo-500/5 text-zinc-700;
+}
+html:not(.dark) .md-body hr {
+  @apply border-zinc-200;
+}
+html:not(.dark) .md-body th {
+  @apply text-zinc-800;
+}
+html:not(.dark) .md-body td {
+  @apply text-zinc-700;
+}
+html:not(.dark) .md-body thead {
+  @apply bg-zinc-100;
+}
+html:not(.dark) .md-body th,
+html:not(.dark) .md-body td {
+  @apply border-zinc-200;
+}
+html:not(.dark) .md-body code {
+  @apply bg-zinc-200/70 text-indigo-700;
 }
