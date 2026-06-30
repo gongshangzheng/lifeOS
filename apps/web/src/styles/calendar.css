@@ -20,14 +20,20 @@
   }
 
   /* ---------- Buttons (today / prev / next / view-switcher) -- */
-  .lo-calendar .fc-button {
+  .lo-calendar .fc-button,
+  .lo-calendar .fc-button-primary,
+  .lo-calendar .fc-button-primary:disabled,
+  .lo-calendar .fc-button-primary:not(:disabled):not(.fc-button-active),
+  .lo-calendar .fc-button-primary:not(:disabled):active {
     @apply rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-body shadow-none transition-colors;
     text-transform: none;
   }
-  .lo-calendar .fc-button:hover {
-    @apply border-border-subtle bg-muted;
+  .lo-calendar .fc-button:hover,
+  .lo-calendar .fc-button-primary:hover {
+    @apply border-border-subtle bg-muted text-heading;
   }
-  .lo-calendar .fc-button:disabled {
+  .lo-calendar .fc-button:disabled,
+  .lo-calendar .fc-button-primary:disabled {
     @apply cursor-not-allowed opacity-50;
   }
   .lo-calendar .fc-button-primary:not(:disabled).fc-button-active,
