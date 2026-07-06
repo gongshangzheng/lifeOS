@@ -1,0 +1,45 @@
+{
+  "project": "interpersonal-relationships",
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "爱情",
+      "status": "active",
+      "startDate": "2026-07-06",
+      "endDate": null,
+      "description": "寻找与发展恋爱关系",
+      "children": [
+        { "id": "t1-1", "title": "拓展社交圈", "status": "active", "startDate": null, "endDate": null, "description": "参加社交活动、兴趣小组，扩大认识新朋友的机会", "children": [] },
+        { "id": "t1-2", "title": "自我提升", "status": "active", "startDate": null, "endDate": null, "description": "外在形象与内在修养的持续提升", "children": [] }
+      ]
+    },
+    {
+      "id": "t2",
+      "title": "亲情",
+      "status": "active",
+      "startDate": "2026-07-06",
+      "endDate": null,
+      "description": "与家人的关系维护",
+      "children": [
+        { "id": "t2-1", "title": "定期联系家人", "status": "active", "startDate": null, "endDate": null, "description": "每周至少与父母通话一次", "children": [] },
+        { "id": "t2-2", "title": "节日与生日记挂", "status": "planned", "startDate": null, "endDate": null, "description": "记住家人的生日和重要节日，提前准备", "children": [] }
+      ]
+    },
+    {
+      "id": "t3",
+      "title": "友情",
+      "status": "active",
+      "startDate": "2026-07-06",
+      "endDate": null,
+      "description": "维护和发展友谊",
+      "children": [
+        { "id": "t3-1", "title": "主动联系老朋友", "status": "active", "startDate": null, "endDate": null, "description": "定期与老朋友保持联系，不因距离疏远", "children": [] },
+        { "id": "t3-2", "title": "结交新朋友", "status": "active", "startDate": null, "endDate": null, "description": "通过兴趣活动、行业交流等渠道拓展朋友圈", "children": [] }
+      ]
+    }
+  ]
+}
+{
+  "project": "love",
+  "tasks": []
+}
