@@ -7,6 +7,7 @@ import {
   vision,
   appendix,
   topics,
+  projects,
   resume,
   type daily as Daily,
   type weekly as Weekly,
@@ -16,6 +17,7 @@ import {
   type vision as Vision,
   type appendix as Appendix,
   type topics as Topics,
+  type projects as Projects,
   type resume as Resume,
 } from './.velite'
 
@@ -28,7 +30,7 @@ const byDateDesc = <T extends { date?: string | undefined }>(a: T, b: T) => {
 const findBySlug = <T extends { slug: string }>(items: readonly T[], slug: string) =>
   items.find((it) => it.slug === slug)
 
-export type { Daily, Weekly, Monthly, Quarterly, Annual, Vision, Appendix, Topics, Resume }
+export type { Daily, Weekly, Monthly, Quarterly, Annual, Vision, Appendix, Topics, Projects, Resume }
 
 export const getAllDaily = (): Daily[] => [...daily].sort(byDateDesc)
 export const getDailyBySlug = (slug: string): Daily | undefined => findBySlug(daily, slug)
@@ -55,5 +57,17 @@ export const getAppendixBySlug = (slug: string): Appendix | undefined =>
 
 export const getAllTopics = (): Topics[] => [...topics].sort(byDateDesc)
 export const getTopicBySlug = (slug: string): Topics | undefined => findBySlug(topics, slug)
+
+// ── Projects ─────────────────────────────────────────────────
+// Projects use a richer schema with status, timeline, tags, etc.
+const byStartDateDesc = <T extends { startDate?: string | undefined }>(a: T, b: T) => {
+  const da = a.startDate ?? ''
+  const db = b.startDate ?? ''
+  return db.localeCompare(da)
+}
+
+export const getAllProjects = (): Projects[] => [...projects].sort(byStartDateDesc)
+export const getProjectBySlug = (slug: string): Projects | undefined =>
+  findBySlug(projects, slug)
 
 export const getResume = (): Resume | undefined => resume[0]

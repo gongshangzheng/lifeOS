@@ -10,7 +10,7 @@ import {
   BookOpen,
   Library,
   Bookmark,
-  FileText,
+  FolderKanban,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -34,7 +34,7 @@ import {
   TopicsList,
   TopicsDetail,
 } from '@/pages/ReportPages'
-import { ResumePage } from '@/pages/Resume'
+import { ProjectsPage } from '@/pages/Projects'
 
 const NAV: ReadonlyArray<{ to: string; label: string; icon: typeof LayoutDashboard; end?: boolean }> = [
   { to: '/', label: 'Home', icon: LayoutDashboard, end: true },
@@ -46,7 +46,7 @@ const NAV: ReadonlyArray<{ to: string; label: string; icon: typeof LayoutDashboa
   { to: '/annual', label: 'Annual', icon: BookOpen },
   { to: '/vision', label: 'Vision', icon: Compass },
   { to: '/topics', label: 'Topics', icon: Bookmark },
-  { to: '/resume', label: 'Resume', icon: FileText },
+  { to: '/projects', label: 'Projects', icon: FolderKanban },
   { to: '/appendix', label: 'Appendix', icon: Library },
 ]
 
@@ -131,7 +131,7 @@ export default function App() {
         <Route path="topics" element={<TopicsList />} />
         <Route path="topics/:slug" element={<TopicsDetail />} />
 
-        <Route path="resume" element={<ResumePage />} />
+        <Route path="projects" element={<ProjectsPage />} />
 
         <Route path="appendix" element={<AppendixList />} />
         <Route path="appendix/:slug" element={<AppendixDetail />} />
