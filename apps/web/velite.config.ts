@@ -10,7 +10,10 @@ const reportSchema = s
     body: s.raw(),
   })
   .transform((data, { meta }) => {
-    const fallback = (meta.path ?? '').replace(/\.md$/, '').split('/').pop() ?? ''
+    const parts = ((meta.path ?? '').replace(/\.md$/, '')).split('/')
+    // For README.md, use parent dir name as slug; otherwise use filename
+    const filename = parts.pop() ?? ''
+    const fallback = filename === 'README' ? (parts.pop() ?? '') : filename
     return {
       ...data,
       title: data.title ?? fallback,
@@ -44,7 +47,9 @@ const projectSchema = s
     body: s.raw(),
   })
   .transform((data, { meta }) => {
-    const fallback = (meta.path ?? '').replace(/\.md$/, '').split('/').pop() ?? ''
+    const parts = ((meta.path ?? '').replace(/\.md$/, '')).split('/')
+    const filename = parts.pop() ?? ''
+    const fallback = filename === 'README' ? (parts.pop() ?? '') : filename
     return {
       ...data,
       title: data.title ?? fallback,
@@ -82,9 +87,8 @@ export default defineConfig({
     quarterly: report('quarterly', '3-quarterly/**/*.md'),
     annual: report('annual', '2-annual/**/*.md'),
     vision: report('vision', '1-vision/**/*.md'),
-    appendix: report('appendix', 'appendix/**/*.md'),
-    topics: report('topics', 'topics/**/*.md'),
-    projects: project('projects', 'projects/**/*.md'),
+    appendix: report('appendix', '{appendix,topics}/**/*.md'),
+    projects: project('projects', 'projects/*/README.md'),
     resume: report('resume', 'resume.md'),
   },
   mdx: {},

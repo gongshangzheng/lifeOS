@@ -6,7 +6,6 @@ import {
   annual,
   vision,
   appendix,
-  topics,
   projects,
   resume,
   type daily as Daily,
@@ -16,7 +15,6 @@ import {
   type annual as Annual,
   type vision as Vision,
   type appendix as Appendix,
-  type topics as Topics,
   type projects as Projects,
   type resume as Resume,
 } from './.velite'
@@ -30,7 +28,7 @@ const byDateDesc = <T extends { date?: string | undefined }>(a: T, b: T) => {
 const findBySlug = <T extends { slug: string }>(items: readonly T[], slug: string) =>
   items.find((it) => it.slug === slug)
 
-export type { Daily, Weekly, Monthly, Quarterly, Annual, Vision, Appendix, Topics, Projects, Resume }
+export type { Daily, Weekly, Monthly, Quarterly, Annual, Vision, Appendix, Projects, Resume }
 
 export const getAllDaily = (): Daily[] => [...daily].sort(byDateDesc)
 export const getDailyBySlug = (slug: string): Daily | undefined => findBySlug(daily, slug)
@@ -55,9 +53,6 @@ export const getAllAppendix = (): Appendix[] => [...appendix].sort(byDateDesc)
 export const getAppendixBySlug = (slug: string): Appendix | undefined =>
   findBySlug(appendix, slug)
 
-export const getAllTopics = (): Topics[] => [...topics].sort(byDateDesc)
-export const getTopicBySlug = (slug: string): Topics | undefined => findBySlug(topics, slug)
-
 // ── Projects ─────────────────────────────────────────────────
 // Projects use a richer schema with status, timeline, tags, etc.
 const byStartDateDesc = <T extends { startDate?: string | undefined }>(a: T, b: T) => {
@@ -69,5 +64,89 @@ const byStartDateDesc = <T extends { startDate?: string | undefined }>(a: T, b: 
 export const getAllProjects = (): Projects[] => [...projects].sort(byStartDateDesc)
 export const getProjectBySlug = (slug: string): Projects | undefined =>
   findBySlug(projects, slug)
+
+// ── Project Task Trees ───────────────────────────────────────
+// Task trees live alongside project READMEs in content/projects/{slug}/tasks.json.
+// A Vite plugin (projectTasksPlugin) serves them at /{slug}.tasks.json during dev
+// and copies them to dist/ during production build.
+
+export type TaskStatus = 'active' | 'completed' | 'planned' | 'blocked' | 'paused'
+
+export interface TaskNode {
+  id: string
+  title: string
+  status: TaskStatus
+  assignee?: string
+  startDate?: string | null
+  endDate?: string | null
+  /** Simple inline description text (shown when no notePath is set) */
+  description?: string
+  /** Path to a markdown note file, relative to project folder (e.g. "notes/task-detail.md") */
+  notePath?: string
+  children: TaskNode[]
+}
+
+export interface TaskTree {
+  project: string
+  tasks: TaskNode[]
+}
+
+export async function getProjectTasks(slug: string): Promise<TaskTree | null> {
+  try {
+    const res = await fetch(`/lifeOS/${slug}.tasks.json`)
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
+}
+
+/** Recursively count tasks in a tree */
+export function countTasks(tasks: TaskNode[]): { total: number; completed: number } {
+  let total = 0
+  let completed = 0
+  for (const t of tasks) {
+    total++
+    if (t.status === 'completed') completed++
+    if (t.children.length > 0) {
+      const sub = countTasks(t.children)
+      total += sub.total
+      completed += sub.completed
+    }
+  }
+  return { total, completed }
+}
+
+/** Flatten all tasks with date ranges for calendar display */
+export function flattenDatedTasks(
+  tasks: TaskNode[],
+  projectSlug: string,
+): Array<TaskNode & { projectSlug: string }> {
+  const result: Array<TaskNode & { projectSlug: string }> = []
+  for (const t of tasks) {
+    if (t.startDate) result.push({ ...t, projectSlug })
+    if (t.children.length > 0) {
+      result.push(...flattenDatedTasks(t.children, projectSlug))
+    }
+  }
+  return result
+}
+
+/** Flatten undated leaf tasks (no startDate, not completed) for sidebar display */
+export function flattenUndatedTasks(
+  tasks: TaskNode[],
+  projectSlug: string,
+): Array<TaskNode & { projectSlug: string }> {
+  const result: Array<TaskNode & { projectSlug: string }> = []
+  for (const t of tasks) {
+    if (!t.startDate && t.status !== 'completed' && t.children.length === 0) {
+      result.push({ ...t, projectSlug })
+    }
+    if (t.children.length > 0) {
+      result.push(...flattenUndatedTasks(t.children, projectSlug))
+    }
+  }
+  return result
+}
 
 export const getResume = (): Resume | undefined => resume[0]

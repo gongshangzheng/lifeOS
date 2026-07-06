@@ -1,0 +1,37 @@
+{
+  "project": "self-improvement",
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "健身",
+      "status": "active",
+      "startDate": null,
+      "endDate": null,
+      "description": "健身塑形，提升身体素质",
+      "children": []
+    },
+    {
+      "id": "t2",
+      "title": "化妆",
+      "status": "active",
+      "startDate": null,
+      "endDate": null,
+      "description": "学习化妆技巧，建立日常护肤流程",
+      "children": []
+    },
+    {
+      "id": "t3",
+      "title": "爱好培养",
+      "status": "active",
+      "startDate": null,
+      "endDate": null,
+      "description": "培养多元兴趣爱好",
+      "children": [
+        { "id": "t3-1", "title": "看电影", "status": "planned", "startDate": null, "endDate": null, "description": "扩展观影清单，涉猎不同类型", "children": [] },
+        { "id": "t3-2", "title": "看书", "status": "planned", "startDate": null, "endDate": null, "description": "养成定期阅读习惯", "children": [] },
+        { "id": "t3-3", "title": "学吉他", "status": "planned", "startDate": null, "endDate": null, "description": "入门和弦与基本指法", "children": [] },
+        { "id": "t3-4", "title": "学画画", "status": "planned", "startDate": null, "endDate": null, "description": "基础素描与色彩练习", "children": [] }
+      ]
+    }
+  ]
+}
