@@ -490,10 +490,22 @@ function cmdOverview(_args) {
 function loadTaskTree(slug) {
   const filePath = join(DIRS.projects, slug, 'tasks.json')
   try {
-    return JSON.parse(readFileSync(filePath, 'utf-8'))
+    const tree = JSON.parse(readFileSync(filePath, 'utf-8'))
+    tree.tasks = cascadeStatus(tree.tasks)
+    return tree
   } catch {
     return null
   }
+}
+
+/** Cascade completion: mark parent completed if all children are completed */
+function cascadeStatus(tasks) {
+  return tasks.map((t) => {
+    if (!t.children || t.children.length === 0) return t
+    const children = cascadeStatus(t.children)
+    const allCompleted = children.every((c) => c.status === 'completed')
+    return { ...t, children, status: allCompleted ? 'completed' : t.status }
+  })
 }
 
 function saveTaskTree(slug, data) {

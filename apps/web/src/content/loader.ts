@@ -91,11 +91,29 @@ export interface TaskTree {
   tasks: TaskNode[]
 }
 
+/**
+ * Cascade completion: if all children are completed, mark parent as completed.
+ * Recursively processes from leaf nodes upward.
+ */
+function cascadeStatus(tasks: TaskNode[]): TaskNode[] {
+  return tasks.map((t) => {
+    if (t.children.length === 0) return t
+    const children = cascadeStatus(t.children)
+    const allCompleted = children.every((c) => c.status === 'completed')
+    return {
+      ...t,
+      children,
+      status: allCompleted ? 'completed' as TaskStatus : t.status,
+    }
+  })
+}
+
 export async function getProjectTasks(slug: string): Promise<TaskTree | null> {
   try {
     const res = await fetch(`/lifeOS/${slug}.tasks.json`)
     if (!res.ok) return null
-    return res.json()
+    const tree: TaskTree = await res.json()
+    return { ...tree, tasks: cascadeStatus(tree.tasks) }
   } catch {
     return null
   }
