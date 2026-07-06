@@ -277,12 +277,15 @@ export function Home() {
         <p className="lo-section-desc">个人生活操作系统 — 愿景、计划、进展与反思。</p>
       </header>
 
-      {/* Time display */}
-      <div className="lo-card p-4">
-        <p className="text-[11px] uppercase tracking-wider text-dim">当前时间</p>
-        <p className="mt-1 font-mono text-3xl font-semibold text-heading">
-          {now.toLocaleString('zh-CN', { hour12: false })}
-        </p>
+      {/* Time display + Heatmap */}
+      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+        <div className="lo-card p-4">
+          <p className="text-[11px] uppercase tracking-wider text-dim">当前时间</p>
+          <p className="mt-1 font-mono text-2xl font-semibold text-heading">
+            {now.toLocaleString('zh-CN', { hour12: false })}
+          </p>
+        </div>
+        <ContributionHeatmap />
       </div>
 
       {/* Stats grid */}
@@ -453,9 +456,6 @@ export function Home() {
           )}
         </div>
       </div>
-
-      {/* Contribution heatmap */}
-      <ContributionHeatmap />
     </section>
   )
 }
