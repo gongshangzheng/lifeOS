@@ -48,8 +48,8 @@
       "endDate": null,
       "description": "Git 风格任务树、项目管理",
       "children": [
-        { "id": "t4-1", "title": "Git 风格任务树页面", "status": "active", "startDate": null, "endDate": null, "description": "可展开/折叠的任务树，状态图标，详情面板", "children": [] },
-        { "id": "t4-2", "title": "任务树 JSON 数据管理", "status": "active", "startDate": null, "endDate": null, "description": "独立 JSON 文件，CLI 脚本管理", "children": [] },
+        { "id": "t4-1", "title": "Git 风格任务树页面", "status": "completed", "startDate": null, "endDate": null, "description": "可展开/折叠的任务树，状态图标，详情面板，notePath 加载，URL hash 持久化", "children": [] },
+        { "id": "t4-2", "title": "任务树 JSON 数据管理", "status": "completed", "startDate": null, "endDate": null, "description": "独立 JSON 文件，plans.mjs CLI 管理（task-update / task-add）", "children": [] },
         { "id": "t4-3", "title": "Plans CLI 脚本", "status": "completed", "startDate": null, "endDate": null, "description": "plans.mjs：列出项目、日/周/月/季/年计划", "children": [] }
       ]
     },
