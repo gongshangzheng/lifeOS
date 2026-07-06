@@ -1,0 +1,411 @@
+#!/usr/bin/env node
+// ============================================================
+// lifeOS Report Generator — 从模板生成日报/周报/月报/季报
+// ============================================================
+// Usage:
+//   node scripts/generate-report.mjs daily [--date YYYY-MM-DD]
+//   node scripts/generate-report.mjs weekly [--date YYYY-MM-DD]
+//   node scripts/generate-report.mjs monthly [--date YYYY-MM]
+//   node scripts/generate-report.mjs quarterly [--date YYYY-QN]
+// ============================================================
+
+import { writeFileSync, existsSync, mkdirSync } from 'node:fs'
+import { resolve, dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const CONTENT_DIR = resolve(__dirname, '../apps/web/content')
+
+const DIRS = {
+  daily: join(CONTENT_DIR, '6-daily'),
+  weekly: join(CONTENT_DIR, '5-weekly'),
+  monthly: join(CONTENT_DIR, '4-monthly'),
+  quarterly: join(CONTENT_DIR, '3-quarterly'),
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+
+function pad(n) {
+  return String(n).padStart(2, '0')
+}
+
+function fmtDate(d) {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+function getWeekNumber(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  const dayNum = date.getUTCDay() || 7
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
+  return Math.ceil(((date - yearStart) / 86400000 + 1) / 7)
+}
+
+function getMonday(d) {
+  const date = new Date(d)
+  const day = date.getDay()
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1)
+  return new Date(date.setDate(diff))
+}
+
+function getWeekdayCN(d) {
+  return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()]
+}
+
+function parseArgs(args) {
+  const result = {}
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--date' && args[i + 1]) {
+      result.date = args[++i]
+    }
+  }
+  return result
+}
+
+// ── Generators ───────────────────────────────────────────────
+
+function generateDaily(dateStr) {
+  const date = dateStr ? new Date(dateStr) : new Date()
+  const dateStr_ = fmtDate(date)
+  const weekday = getWeekdayCN(date)
+  const weekNum = getWeekNumber(date)
+  const monthStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}`
+  const weekSlug = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-W${pad(weekNum)}`
+
+  // Prev/next day
+  const prev = new Date(date)
+  prev.setDate(prev.getDate() - 1)
+  const next = new Date(date)
+  next.setDate(next.getDate() + 1)
+
+  const title = `日报 - ${dateStr_} ${weekday}`
+  const summary = `上层： [${monthStr} 月报](../4-monthly/${monthStr}.md) ｜ [${weekSlug} 周报](../5-weekly/${weekSlug}.md) 同层连续： [前一天日报](../6-daily/${fmtDate(prev)}.md) ｜ [后一天日报](../6-daily/${fmtDate(next)}.md)`
+
+  const content = `---
+title: "${title}"
+slug: "${dateStr_}"
+type: daily
+date: ${dateStr_}
+summary: "${summary}"
+tags:
+  - daily
+  - report
+  - ${monthStr}
+---
+
+# ${title}
+
+
+> 上层： [${monthStr} 月报](../4-monthly/${monthStr}.md) ｜ [${weekSlug} 周报](../5-weekly/${weekSlug}.md)
+> 同层连续： [前一天日报](../6-daily/${fmtDate(prev)}.md) ｜ [后一天日报](../6-daily/${fmtDate(next)}.md)
+
+---
+
+## 今日优先
+
+| 事项 | 优先级 | 日历 | 状态 |
+|------|--------|------|------|
+|      | P0     |      |      |
+
+---
+
+## 时间安排
+
+| 时间 | 事项 | 日历 | 说明 |
+|------|------|------|------|
+|      |      |      |      |
+
+---
+
+## 规划
+
+### 今日目标
+
+- [ ] 
+
+### 备注
+
+- 
+
+---
+
+## 进展记录
+
+
+
+---
+
+## 总结
+
+### 完成事项
+
+- [ ] 
+
+### 未完成 & 原因
+
+- 
+
+### 今日收获
+
+- 
+
+### 明日待跟进
+
+- [ ] 
+
+---
+
+## 日记
+
+-
+`
+
+  return {
+    path: join(DIRS.daily, `${dateStr_}.md`),
+    content,
+    title,
+  }
+}
+
+function generateWeekly(dateStr) {
+  const date = dateStr ? new Date(dateStr) : new Date()
+  const monday = getMonday(date)
+  const sunday = new Date(monday)
+  sunday.setDate(sunday.getDate() + 6)
+
+  const weekNum = getWeekNumber(monday)
+  const monthStr = `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}`
+  const weekSlug = `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-W${pad(weekNum)}`
+
+  const quarterNum = Math.ceil((monday.getMonth() + 1) / 3)
+  const quarterStr = `${monday.getFullYear()}-Q${quarterNum}`
+
+  const mondayStr = `${pad(monday.getMonth() + 1)}.${pad(monday.getDate())}`
+  const sundayStr = `${pad(sunday.getMonth() + 1)}.${pad(sunday.getDate())}`
+
+  const title = `周报 - ${monday.getFullYear()}年${monday.getMonth() + 1}月第${weekNum}周 (${mondayStr} - ${sundayStr})`
+  const summary = `上层： [${monthStr} 月报](../4-monthly/${monthStr}.md) ｜ [${quarterStr} 季报](../3-quarterly/${quarterStr}.md)`
+
+  const content = `---
+title: "${title}"
+slug: "${weekSlug}"
+type: weekly
+date: ${fmtDate(monday)}
+summary: "${summary}"
+tags:
+  - weekly
+  - plan
+  - ${monthStr}
+weekNumber: ${weekNum}
+---
+
+# ${title}
+
+
+> 上层： [${monthStr} 月报](../4-monthly/${monthStr}.md) ｜ [${quarterStr} 季报](../3-quarterly/${quarterStr}.md)
+
+## 本周主题
+
+
+
+## 本周核心目标
+
+1. 
+2. 
+3. 
+
+## 本周重点任务
+
+### 工作/实习
+- [ ] 
+
+### 学习/成长
+- [ ] 
+
+### 生活/健康
+- [ ] 
+
+### 社交/感情
+- [ ] 
+`
+
+  return {
+    path: join(DIRS.weekly, `${weekSlug}.md`),
+    content,
+    title,
+  }
+}
+
+function generateMonthly(dateStr) {
+  const date = dateStr ? new Date(dateStr + '-01') : new Date()
+  const monthStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}`
+  const quarterNum = Math.ceil((date.getMonth() + 1) / 3)
+  const quarterStr = `${date.getFullYear()}-Q${quarterNum}`
+
+  const title = `月报 - ${date.getFullYear()}年${date.getMonth() + 1}月`
+  const summary = `上层： [${quarterStr} 季报](../3-quarterly/${quarterStr}.md) ｜ [${date.getFullYear()} 年报](../2-annual/${date.getFullYear()}.md)`
+
+  const content = `---
+title: "${title}"
+slug: "${monthStr}"
+type: monthly
+date: ${monthStr}-01
+summary: "${summary}"
+tags:
+  - monthly
+  - report
+  - ${monthStr}
+---
+
+# ${title}
+
+
+> 上层： [${quarterStr} 季报](../3-quarterly/${quarterStr}.md) ｜ [${date.getFullYear()} 年报](../2-annual/${date.getFullYear()}.md)
+
+## 本月主题
+
+
+
+## 月度计划
+
+### 核心方向
+- [ ] 
+- [ ] 
+
+### 阶段划分
+- [ ] 上旬：
+- [ ] 中旬：
+- [ ] 下旬：
+
+## 关键数据
+
+| 维度 | 目标 | 实际 |
+|------|------|------|
+|      |      |      |
+
+## 月度反思
+
+-
+`
+
+  return {
+    path: join(DIRS.monthly, `${monthStr}.md`),
+    content,
+    title,
+  }
+}
+
+function generateQuarterly(dateStr) {
+  let year, quarterNum
+  if (dateStr) {
+    const m = dateStr.match(/^(\d{4})-Q(\d)$/)
+    if (!m) { console.error('季报日期格式: YYYY-QN'); process.exit(1) }
+    year = parseInt(m[1])
+    quarterNum = parseInt(m[2])
+  } else {
+    const now = new Date()
+    year = now.getFullYear()
+    quarterNum = Math.ceil((now.getMonth() + 1) / 3)
+  }
+  const quarterStr = `${year}-Q${quarterNum}`
+  const startMonth = (quarterNum - 1) * 3 + 1
+  const endMonth = startMonth + 2
+
+  const title = `季报 - ${year}年${quarterStr.slice(-2)}（${startMonth}-${endMonth}月）`
+  const summary = `上层： [${year} 年报](../2-annual/${year}.md) ｜ [五年计划](../1-vision/five-year-2026-2030.md)`
+
+  const content = `---
+title: "${title}"
+slug: "${quarterStr}"
+type: quarterly
+date: ${year}-${pad(startMonth)}-01
+summary: "${summary}"
+tags:
+  - quarterly
+  - report
+  - ${quarterStr}
+quarter: ${quarterStr.slice(-2)}
+---
+
+# ${title}
+
+
+> 上层： [${year} 年报](../2-annual/${year}.md) ｜ [五年计划](../1-vision/five-year-2026-2030.md)
+
+---
+
+## 本季度核心目标
+
+- [ ] 
+- [ ] 
+- [ ] 
+
+---
+
+## 各维度进展
+
+| 维度 | 目标 | 状态 | 趋势 | 完成度 |
+|------|------|------|------|--------|
+|      |      |      |      |        |
+
+---
+
+## 季度反思
+
+- 做得好的：
+- 需要改进的：
+- 季度感悟：
+
+## 下季度计划
+
+- [ ] 
+- [ ] 
+- [ ] 
+`
+
+  return {
+    path: join(DIRS.quarterly, `${quarterStr}.md`),
+    content,
+    title,
+  }
+}
+
+// ── Main ─────────────────────────────────────────────────────
+
+const [type, ...rest] = process.argv.slice(2)
+const opts = parseArgs(rest)
+
+const generators = {
+  daily: () => generateDaily(opts.date),
+  weekly: () => generateWeekly(opts.date),
+  monthly: () => generateMonthly(opts.date),
+  quarterly: () => generateQuarterly(opts.date),
+}
+
+if (!type || !generators[type]) {
+  console.error('Usage: node scripts/generate-report.mjs <daily|weekly|monthly|quarterly> [--date YYYY-MM-DD]')
+  console.error('')
+  console.error('  daily     [--date YYYY-MM-DD]   默认今天')
+  console.error('  weekly    [--date YYYY-MM-DD]   默认本周')
+  console.error('  monthly   [--date YYYY-MM]      默认本月')
+  console.error('  quarterly [--date YYYY-QN]      默认本季')
+  process.exit(1)
+}
+
+const result = generators[type]()
+
+// Ensure directory exists
+const dir = dirname(result.path)
+if (!existsSync(dir)) {
+  mkdirSync(dir, { recursive: true })
+}
+
+// Check if file already exists
+if (existsSync(result.path)) {
+  console.error(`文件已存在: ${result.path}`)
+  process.exit(1)
+}
+
+writeFileSync(result.path, result.content, 'utf-8')
+console.log(`已创建: ${result.path}`)
+console.log(`标题: ${result.title}`)
