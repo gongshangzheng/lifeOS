@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { ReportList, type ReportListItem } from '@/components/ReportList'
 import { ReportDetail, type ReportDetailItem } from '@/components/ReportDetail'
+import { RelatedReports } from '@/components/RelatedReports'
 import {
   getAllDaily,
   getDailyBySlug,
@@ -16,8 +17,6 @@ import {
   getVisionBySlug,
   getAllAppendix,
   getAppendixBySlug,
-  getAllTopics,
-  getTopicBySlug,
 } from '@/content/loader'
 
 type CollectionConfig<Slug extends string = string> = {
@@ -82,19 +81,11 @@ const COLLECTIONS = {
   },
   appendix: {
     label: 'Appendix',
-    description: '长文、专题与背景资料。',
+    description: '随笔、长文、专题与背景资料。',
     basePath: '/appendix',
-    empty: '还没有附录。',
+    empty: '还没有文章。',
     listLoader: getAllAppendix,
     detailLoader: getAppendixBySlug,
-  },
-  topics: {
-    label: 'Topics',
-    description: '生活随笔、书单、灵感与杂项。',
-    basePath: '/topics',
-    empty: '还没有随笔。',
-    listLoader: getAllTopics,
-    detailLoader: getTopicBySlug,
   },
 } as const satisfies Record<string, CollectionConfig>
 
@@ -132,16 +123,20 @@ function makeDetailPage(key: CollectionKey) {
           body: raw.body,
         }
       : undefined
-    // Show events only for daily reports
     const eventsDate = key === 'daily' && item?.date ? item.date.slice(0, 10) : undefined
     return (
-      <ReportDetail
-        item={item}
-        backTo={cfg.basePath}
-        backLabel={`${cfg.label} 列表`}
-        notFoundTitle={`未找到 ${cfg.label}`}
-        showEventsForDate={eventsDate}
-      />
+      <>
+        <ReportDetail
+          item={item}
+          backTo={cfg.basePath}
+          backLabel={`${cfg.label} 列表`}
+          notFoundTitle={`未找到 ${cfg.label}`}
+          showEventsForDate={eventsDate}
+        />
+        {item?.date && (
+          <RelatedReports type={key} slug={item.slug} date={item.date} />
+        )}
+      </>
     )
   }
 }
@@ -160,5 +155,3 @@ export const VisionList = makeListPage('vision')
 export const VisionDetail = makeDetailPage('vision')
 export const AppendixList = makeListPage('appendix')
 export const AppendixDetail = makeDetailPage('appendix')
-export const TopicsList = makeListPage('topics')
-export const TopicsDetail = makeDetailPage('topics')

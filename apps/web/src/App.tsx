@@ -1,6 +1,6 @@
 import { Routes, Route, NavLink, Outlet, Navigate, Link } from 'react-router-dom'
+import { useState } from 'react'
 import {
-  LayoutDashboard,
   CalendarDays,
   NotebookPen,
   CalendarRange,
@@ -9,11 +9,12 @@ import {
   Compass,
   BookOpen,
   Library,
-  Bookmark,
   FolderKanban,
+  Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { SearchModal, SearchButton } from '@/components/SearchModal'
 import { Home } from '@/pages/Home'
 import { CalendarPage } from '@/pages/Calendar'
 import {
@@ -31,63 +32,65 @@ import {
   VisionDetail,
   AppendixList,
   AppendixDetail,
-  TopicsList,
-  TopicsDetail,
 } from '@/pages/ReportPages'
 import { ProjectsPage } from '@/pages/Projects'
+import { HabitsPage } from '@/pages/Habits'
 
-const NAV: ReadonlyArray<{ to: string; label: string; icon: typeof LayoutDashboard; end?: boolean }> = [
-  { to: '/', label: 'Home', icon: LayoutDashboard, end: true },
+const NAV: ReadonlyArray<{ to: string; label: string; icon: typeof CalendarDays }> = [
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
+  { to: '/habits', label: 'Habits', icon: Activity },
   { to: '/daily', label: 'Daily', icon: NotebookPen },
   { to: '/weekly', label: 'Weekly', icon: CalendarRange },
   { to: '/monthly', label: 'Monthly', icon: CalendarIcon },
   { to: '/quarterly', label: 'Quarterly', icon: Target },
   { to: '/annual', label: 'Annual', icon: BookOpen },
   { to: '/vision', label: 'Vision', icon: Compass },
-  { to: '/topics', label: 'Topics', icon: Bookmark },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
   { to: '/appendix', label: 'Appendix', icon: Library },
 ]
 
 function NavBar() {
+  const [searchOpen, setSearchOpen] = useState(false)
   return (
-    <header className="lo-nav">
-      <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4">
-        <Link to="/" className="mr-4 flex items-center gap-2">
-          <div className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground">
-            <span className="text-xs font-bold">L</span>
+    <>
+      <header className="lo-nav">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4">
+          <Link to="/" className="mr-4 flex items-center gap-2">
+            <div className="grid h-7 w-7 place-items-center rounded-md bg-primary text-primary-foreground">
+              <span className="text-xs font-bold">L</span>
+            </div>
+            <span className="text-sm font-semibold tracking-wide text-heading">lifeOS</span>
+          </Link>
+          <nav className="flex flex-1 items-center gap-1 overflow-x-auto">
+            {NAV.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  cn(
+                    'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
+                    isActive
+                      ? 'bg-primary-subtle text-primary-subtle-foreground'
+                      : 'text-dim hover:bg-muted hover:text-heading',
+                  )
+                }
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="ml-auto flex items-center gap-2">
+            <SearchButton onClick={() => setSearchOpen(true)} />
+            <span className="hidden text-[10px] uppercase tracking-widest text-placeholder sm:inline">
+              v0.1
+            </span>
+            <ThemeToggle />
           </div>
-          <span className="text-sm font-semibold tracking-wide text-heading">lifeOS</span>
-        </Link>
-        <nav className="flex flex-1 items-center gap-1 overflow-x-auto">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                cn(
-                  'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary-subtle text-primary-subtle-foreground'
-                    : 'text-dim hover:bg-muted hover:text-heading',
-                )
-              }
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="hidden text-[10px] uppercase tracking-widest text-placeholder sm:inline">
-            v0.1
-          </span>
-          <ThemeToggle />
         </div>
-      </div>
-    </header>
+      </header>
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+    </>
   )
 }
 
@@ -110,6 +113,8 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="calendar" element={<CalendarPage />} />
 
+        <Route path="habits" element={<HabitsPage />} />
+
         <Route path="daily" element={<DailyList />} />
         <Route path="daily/:slug" element={<DailyDetail />} />
 
@@ -127,9 +132,6 @@ export default function App() {
 
         <Route path="vision" element={<VisionList />} />
         <Route path="vision/:slug" element={<VisionDetail />} />
-
-        <Route path="topics" element={<TopicsList />} />
-        <Route path="topics/:slug" element={<TopicsDetail />} />
 
         <Route path="projects" element={<ProjectsPage />} />
 
