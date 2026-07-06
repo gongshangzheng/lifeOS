@@ -213,9 +213,13 @@ export function CalendarPage() {
               const source = arg.event.extendedProps.source as string
               if (source === 'task') {
                 const slug = arg.event.extendedProps.projectSlug as string
-                const colors = PROJECT_TASK_COLORS[slug] ?? DEFAULT_TASK_COLOR
+                const status = arg.event.extendedProps.taskStatus as string
+                const isCompleted = status === 'completed'
+                const colors = isCompleted
+                  ? { bg: 'bg-zinc-500/15', border: 'border-zinc-500/30', text: 'text-zinc-400' }
+                  : (PROJECT_TASK_COLORS[slug] ?? DEFAULT_TASK_COLOR)
                 return (
-                  <div className={`rounded px-1 py-0.5 text-xs ${colors.bg}`}>
+                  <div className={`rounded px-1 py-0.5 text-xs ${colors.bg} ${isCompleted ? 'line-through opacity-60' : ''}`}>
                     {arg.event.title}
                   </div>
                 )
@@ -269,16 +273,19 @@ export function CalendarPage() {
                   )
                 })}
                 {todayTasks.map((t) => {
-                  const colors = PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR
+                  const isCompleted = t.status === 'completed'
+                  const colors = isCompleted
+                    ? { bg: 'bg-zinc-500/15', border: 'border-zinc-500/30', text: 'text-zinc-400' }
+                    : (PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR)
                   return (
                     <div
                       key={`task-${t.projectSlug}-${t.id}`}
-                      className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
+                      className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80 ${isCompleted ? 'opacity-60' : ''}`}
                       onClick={() => setSelected({ kind: 'task', data: t })}
                     >
                       <FolderKanban className={`h-3 w-3 flex-shrink-0 ${colors.text}`} />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-xs font-medium text-body">{t.title}</div>
+                        <div className={`truncate text-xs font-medium text-body ${isCompleted ? 'line-through' : ''}`}>{t.title}</div>
                         <div className="truncate text-[10px] text-dim">
                           {t.projectSlug} · {t.status}
                         </div>
