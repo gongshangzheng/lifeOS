@@ -37,6 +37,7 @@ const PROJECT_TASK_COLORS: Record<string, { bg: string; border: string; text: st
   lifeos: { bg: 'bg-violet-500/15', border: 'border-violet-500/40', text: 'text-violet-400' },
   'self-improvement': { bg: 'bg-amber-500/15', border: 'border-amber-500/40', text: 'text-amber-400' },
   'interpersonal-relationships': { bg: 'bg-pink-500/15', border: 'border-pink-500/40', text: 'text-pink-400' },
+  'internship-projects': { bg: 'bg-cyan-500/15', border: 'border-cyan-500/40', text: 'text-cyan-400' },
 }
 
 const DEFAULT_TASK_COLOR = { bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-400' }

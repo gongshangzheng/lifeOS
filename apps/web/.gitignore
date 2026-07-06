@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Project symlinks (point to ~/code/)
+content/projects/*/links
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

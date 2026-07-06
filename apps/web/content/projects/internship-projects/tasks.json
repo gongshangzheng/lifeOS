@@ -1,0 +1,54 @@
+{
+  "project": "internship-projects",
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "钉钉数字人",
+      "status": "active",
+      "startDate": "2026-06-01",
+      "endDate": null,
+      "description": "会议面试官数字人，详见 dingtalk-digital-human 项目",
+      "children": [
+        { "id": "t1-1", "title": "评测框架优化", "status": "active", "startDate": null, "endDate": null, "description": "人脸 matting + 唇同步排查 + 无参评测模型", "children": [] },
+        { "id": "t1-2", "title": "模型部署测试", "status": "planned", "startDate": null, "endDate": null, "description": "近实时 / 非实时模型部署", "children": [] },
+        { "id": "t1-3", "title": "Conversation 数据集", "status": "planned", "startDate": null, "endDate": null, "description": "对话场景评测数据集制作", "children": [] }
+      ]
+    },
+    {
+      "id": "t2",
+      "title": "宠物动作识别",
+      "status": "active",
+      "startDate": "2026-06-29",
+      "endDate": null,
+      "description": "室内猫咪端侧动作识别，详见 pet-action-recognition 项目",
+      "children": [
+        { "id": "t2-1", "title": "Phase 2 两阶段方案调研", "status": "active", "startDate": null, "endDate": null, "description": "先建模目标再建模动作的两阶段方案", "children": [] },
+        { "id": "t2-2", "title": "重点方案实现与检测", "status": "planned", "startDate": null, "endDate": null, "description": "", "children": [] }
+      ]
+    },
+    {
+      "id": "t3",
+      "title": "红外轮廓图像压缩",
+      "status": "active",
+      "startDate": "2026-06-15",
+      "endDate": null,
+      "description": "2.4kbps 超低码率轮廓压缩，详见 infrared-contour-compression 项目",
+      "children": [
+        { "id": "t3-1", "title": "需求确认与方向对齐", "status": "active", "startDate": null, "endDate": null, "description": "与老师确认核心问题，详见 infrared-contour-compression 项目", "children": [] },
+        { "id": "t3-2", "title": "I 帧轮廓压缩方案", "status": "planned", "startDate": null, "endDate": null, "description": "0.01bpp 约束下的压缩框架", "children": [] }
+      ]
+    },
+    {
+      "id": "t4",
+      "title": "简历维护",
+      "status": "active",
+      "startDate": "2026-06-01",
+      "endDate": null,
+      "description": "PDF + LaTeX 简历持续更新",
+      "children": [
+        { "id": "t4-1", "title": "更新实习经历", "status": "active", "startDate": null, "endDate": null, "description": "补充钉钉数字人实习内容", "children": [] },
+        { "id": "t4-2", "title": "项目经历提炼", "status": "planned", "startDate": null, "endDate": null, "description": "将各项目成果提炼为简历可用的项目描述", "children": [] }
+      ]
+    }
+  ]
+}
