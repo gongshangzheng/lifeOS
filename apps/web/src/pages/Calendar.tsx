@@ -23,6 +23,58 @@ interface CalendarEvent {
   description?: string
 }
 
+interface RecurringEvent {
+  id: string
+  title: string
+  pattern: 'daily' | 'weekly' | 'every-N-days'
+  every?: number
+  startTime?: string
+  endTime?: string
+  location?: string
+  category?: string
+  description?: string
+  activeFrom: string
+  activeUntil?: string | null
+  excludeDates: string[]
+}
+
+/** Expand recurring events into individual instances for a date range */
+function expandRecurring(
+  recurring: RecurringEvent[],
+  fromDate: string,
+  toDate: string,
+): CalendarEvent[] {
+  const result: CalendarEvent[] = []
+  for (const r of recurring) {
+    const start = new Date(Math.max(new Date(fromDate).getTime(), new Date(r.activeFrom).getTime()))
+    const end = r.activeUntil
+      ? new Date(Math.min(new Date(toDate).getTime(), new Date(r.activeUntil).getTime()))
+      : new Date(toDate)
+    const excludeSet = new Set(r.excludeDates || [])
+    let current = new Date(start)
+    while (current <= end) {
+      const dateStr = current.toISOString().slice(0, 10)
+      if (!excludeSet.has(dateStr)) {
+        result.push({
+          id: `evt-${dateStr.replace(/-/g, '')}-${r.id}`,
+          title: r.title,
+          date: dateStr,
+          startTime: r.startTime,
+          endTime: r.endTime,
+          location: r.location,
+          category: r.category,
+          description: r.description,
+        })
+      }
+      if (r.pattern === 'daily') current.setDate(current.getDate() + 1)
+      else if (r.pattern === 'weekly') current.setDate(current.getDate() + 7)
+      else if (r.pattern === 'every-N-days') current.setDate(current.getDate() + (r.every || 3))
+      else break
+    }
+  }
+  return result
+}
+
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   study: { bg: 'bg-blue-500/15', border: 'border-blue-500/40', text: 'text-blue-400' },
   health: { bg: 'bg-green-500/15', border: 'border-green-500/40', text: 'text-green-400' },
@@ -108,9 +160,24 @@ export function CalendarPage() {
 
   // Load events + task trees
   useEffect(() => {
+    // Expand recurring events for a 3-month window (prev/next month around today)
+    const now = new Date()
+    const rangeStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const rangeEnd = new Date(now.getFullYear(), now.getMonth() + 2, 0)
+    const rangeStartStr = rangeStart.toISOString().slice(0, 10)
+    const rangeEndStr = rangeEnd.toISOString().slice(0, 10)
+
     const loadEvents = fetch('/lifeOS/events.json')
       .then((res) => res.json())
-      .then((data) => data.events ?? [])
+      .then((data) => {
+        const oneTime = (data.events ?? []) as CalendarEvent[]
+        const recurring = (data.recurring ?? []) as RecurringEvent[]
+        const expanded = expandRecurring(recurring, rangeStartStr, rangeEndStr)
+        // Merge: expanded recurring events that don't collide with existing event IDs
+        const existingIds = new Set(oneTime.map((e) => e.id))
+        const merged = [...oneTime, ...expanded.filter((e) => !existingIds.has(e.id))]
+        return merged
+      })
       .catch(() => [] as CalendarEvent[])
 
     const projects = getAllProjects()

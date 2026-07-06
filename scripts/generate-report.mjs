@@ -9,12 +9,114 @@
 //   node scripts/generate-report.mjs quarterly [--date YYYY-QN]
 // ============================================================
 
-import { writeFileSync, existsSync, mkdirSync } from 'node:fs'
+import { writeFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { resolve, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const CONTENT_DIR = resolve(__dirname, '../apps/web/content')
+const EVENTS_FILE = resolve(__dirname, '../apps/web/public/events.json')
+
+// ── Recurring task expansion ─────────────────────────────────
+
+function loadEventsData() {
+  try {
+    return JSON.parse(readFileSync(EVENTS_FILE, 'utf-8'))
+  } catch {
+    return { events: [], recurring: [], categories: {} }
+  }
+}
+
+function expandRecurringForDate(dateStr) {
+  const data = loadEventsData()
+  if (!data.recurring || data.recurring.length === 0) return []
+  const result = []
+  for (const r of data.recurring) {
+    if (r.activeFrom && r.activeFrom > dateStr) continue
+    if (r.activeUntil && r.activeUntil < dateStr) continue
+    if ((r.excludeDates || []).includes(dateStr)) continue
+    result.push({
+      ...r,
+      date: dateStr,
+      eventId: `evt-${dateStr.replace(/-/g, '')}-${r.id}`,
+    })
+  }
+  return result
+}
+
+function expandRecurringForRange(fromDate, toDate) {
+  const data = loadEventsData()
+  if (!data.recurring || data.recurring.length === 0) return []
+  const result = []
+  for (const r of data.recurring) {
+    const start = new Date(Math.max(new Date(fromDate).getTime(), new Date(r.activeFrom).getTime()))
+    const end = r.activeUntil
+      ? new Date(Math.min(new Date(toDate).getTime(), new Date(r.activeUntil).getTime()))
+      : new Date(toDate)
+    const excludeSet = new Set(r.excludeDates || [])
+    let current = new Date(start)
+    while (current <= end) {
+      const ds = current.toISOString().slice(0, 10)
+      if (!excludeSet.has(ds)) {
+        result.push({ ...r, date: ds })
+      }
+      if (r.pattern === 'daily') current.setDate(current.getDate() + 1)
+      else if (r.pattern === 'weekly') current.setDate(current.getDate() + 7)
+      else if (r.pattern === 'every-N-days') current.setDate(current.getDate() + (r.every || 3))
+      else break
+    }
+  }
+  return result
+}
+
+function formatRecurringDaily(dateStr) {
+  const tasks = expandRecurringForDate(dateStr)
+  if (tasks.length === 0) return ''
+  const lines = tasks.map((t) => {
+    const time = t.startTime ? t.startTime : '全天'
+    const desc = t.description ? ' — ' + t.description : ''
+    return '- [ ] ' + time + ' ' + t.title + desc
+  })
+  return '\n---\n\n## 定期任务\n\n' + lines.join('\n') + '\n'
+}
+
+function formatRecurringWeekly(fromDate, toDate) {
+  const tasks = expandRecurringForRange(fromDate, toDate)
+  if (tasks.length === 0) return ''
+  // Group by recurring id (unique task)
+  const byId = new Map()
+  for (const t of tasks) {
+    if (!byId.has(t.id)) byId.set(t.id, { ...t, dates: [] })
+    byId.get(t.id).dates.push(t.date)
+  }
+  const lines = [...byId.values()].map((t) => {
+    const freq = t.pattern === 'daily' ? '每日' : t.pattern === 'weekly' ? '每周' : '每' + (t.every || 3) + '天'
+    const count = t.dates.length
+    const desc = t.description ? ' — ' + t.description : ''
+    return '- [ ] ' + t.title + ' (' + freq + ', 本周' + count + '次)' + desc
+  })
+  return `\n---\n\n## 定期任务\n\n${lines.join('\n')}\n`
+}
+
+function formatRecurringMonthly(monthStr) {
+  const fromDate = `${monthStr}-01`
+  const [y, m] = monthStr.split('-').map(Number)
+  const lastDay = new Date(y, m, 0).getDate()
+  const toDate = `${monthStr}-${pad(lastDay)}`
+  const tasks = expandRecurringForRange(fromDate, toDate)
+  if (tasks.length === 0) return ''
+  const byId = new Map()
+  for (const t of tasks) {
+    if (!byId.has(t.id)) byId.set(t.id, { ...t, count: 0 })
+    byId.get(t.id).count++
+  }
+  const lines = [...byId.values()].map((t) => {
+    const freq = t.pattern === 'daily' ? '每日' : t.pattern === 'weekly' ? '每周' : '每' + (t.every || 3) + '天'
+    const desc = t.description ? ' — ' + t.description : ''
+    return '- [ ] ' + t.title + ' (' + freq + ', 本月' + t.count + '次)' + desc
+  })
+  return `\n---\n\n## 定期任务\n\n${lines.join('\n')}\n`
+}
 
 const DIRS = {
   daily: join(CONTENT_DIR, '6-daily'),
@@ -81,6 +183,8 @@ function generateDaily(dateStr) {
   const title = `日报 - ${dateStr_} ${weekday}`
   const summary = `上层： [${monthStr} 月报](../4-monthly/${monthStr}.md) ｜ [${weekSlug} 周报](../5-weekly/${weekSlug}.md) 同层连续： [前一天日报](../6-daily/${fmtDate(prev)}.md) ｜ [后一天日报](../6-daily/${fmtDate(next)}.md)`
 
+  const recurringSection = formatRecurringDaily(dateStr_)
+
   const content = `---
 title: "${title}"
 slug: "${dateStr_}"
@@ -113,8 +217,7 @@ tags:
 
 | 时间 | 事项 | 日历 | 说明 |
 |------|------|------|------|
-|      |      |      |      |
-
+|      |      |      |      |${recurringSection}
 ---
 
 ## 规划
@@ -226,7 +329,7 @@ weekNumber: ${weekNum}
 - [ ] 
 
 ### 社交/感情
-- [ ] 
+- [ ] ${formatRecurringWeekly(fmtDate(monday), fmtDate(sunday))}
 `
 
   return {
@@ -275,8 +378,7 @@ tags:
 ### 阶段划分
 - [ ] 上旬：
 - [ ] 中旬：
-- [ ] 下旬：
-
+- [ ] 下旬：${formatRecurringMonthly(monthStr)}
 ## 关键数据
 
 | 维度 | 目标 | 实际 |
