@@ -4,7 +4,13 @@ import interactionPlugin from '@fullcalendar/interaction'
 import listPlugin from '@fullcalendar/list'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import type { EventInput } from '@fullcalendar/core'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { FolderKanban, FileText, Download } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { getAllProjects, getProjectTasks, flattenDatedTasks, flattenUndatedTasks, getAllDaily, type TaskNode } from '@/content/loader'
+
+// ── Types ────────────────────────────────────────────────────
 
 interface CalendarEvent {
   id: string
@@ -26,6 +32,17 @@ const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string
   other: { bg: 'bg-gray-500/15', border: 'border-gray-500/40', text: 'text-gray-400' },
 }
 
+const PROJECT_TASK_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+  'dingtalk-digital-human': { bg: 'bg-emerald-500/15', border: 'border-emerald-500/40', text: 'text-emerald-400' },
+  lifeos: { bg: 'bg-violet-500/15', border: 'border-violet-500/40', text: 'text-violet-400' },
+  'self-improvement': { bg: 'bg-amber-500/15', border: 'border-amber-500/40', text: 'text-amber-400' },
+  love: { bg: 'bg-pink-500/15', border: 'border-pink-500/40', text: 'text-pink-400' },
+}
+
+const DEFAULT_TASK_COLOR = { bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-400' }
+
+// ── Converters ───────────────────────────────────────────────
+
 function toFullCalendarEvents(events: CalendarEvent[]): EventInput[] {
   return events.map((e) => ({
     id: e.id,
@@ -36,69 +53,122 @@ function toFullCalendarEvents(events: CalendarEvent[]): EventInput[] {
       category: e.category ?? 'other',
       location: e.location ?? '',
       description: e.description ?? '',
+      source: 'event',
     },
   }))
 }
 
+function taskNodesToFCEvents(
+  datedTasks: Array<TaskNode & { projectSlug: string }>,
+): EventInput[] {
+  return datedTasks.map((t) => {
+    const startDate = t.startDate!
+    const endDate = t.endDate ?? startDate
+    // FullCalendar endDate is exclusive, so add 1 day for all-day events
+    const endExclusive = new Date(endDate)
+    endExclusive.setDate(endExclusive.getDate() + 1)
+    return {
+      id: `task-${t.projectSlug}-${t.id}`,
+      title: `[${t.projectSlug}] ${t.title}`,
+      start: startDate,
+      end: t.endDate ? endExclusive.toISOString().slice(0, 10) : undefined,
+      allDay: !t.startDate?.includes('T'),
+      extendedProps: {
+        source: 'task',
+        projectSlug: t.projectSlug,
+        taskStatus: t.status,
+        description: t.description ?? '',
+        taskChildrenCount: t.children?.length ?? 0,
+      },
+    }
+  })
+}
+
+// ── Selected item (event or task) ────────────────────────────
+
+type SelectedItem =
+  | { kind: 'event'; data: CalendarEvent }
+  | { kind: 'task'; data: TaskNode & { projectSlug: string } }
+
+// ── Component ────────────────────────────────────────────────
+
 export function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([])
+  const [datedTasks, setDatedTasks] = useState<Array<TaskNode & { projectSlug: string }>>([])
+  const [undatedTasks, setUndatedTasks] = useState<Array<TaskNode & { projectSlug: string }>>([])
   const [loading, setLoading] = useState(true)
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
+  const [selected, setSelected] = useState<SelectedItem | null>(null)
 
-  useEffect(() => {
-    fetch('/lifeOS/events.json')
-      .then((res) => res.json())
-      .then((data) => {
-        setEvents(data.events ?? [])
-        setLoading(false)
-      })
-      .catch(() => {
-        setEvents([])
-        setLoading(false)
-      })
+  // Daily slugs for "view daily" links
+  const dailySlugs = useMemo(() => {
+    return new Set(getAllDaily().map((d) => d.slug))
   }, [])
 
-  const fcEvents = toFullCalendarEvents(events)
+  // Load events + task trees
+  useEffect(() => {
+    const loadEvents = fetch('/lifeOS/events.json')
+      .then((res) => res.json())
+      .then((data) => data.events ?? [])
+      .catch(() => [] as CalendarEvent[])
+
+    const projects = getAllProjects()
+    const loadTasks = Promise.all(
+      projects.map(async (p) => {
+        const tree = await getProjectTasks(p.slug)
+        if (!tree) return { dated: [] as Array<TaskNode & { projectSlug: string }>, undated: [] as Array<TaskNode & { projectSlug: string }> }
+        return {
+          dated: flattenDatedTasks(tree.tasks, p.slug),
+          undated: flattenUndatedTasks(tree.tasks, p.slug),
+        }
+      }),
+    ).then((results) => ({
+      dated: results.flatMap((r) => r.dated),
+      undated: results.flatMap((r) => r.undated),
+    }))
+
+    Promise.all([loadEvents, loadTasks]).then(([evts, tasks]) => {
+      setEvents(evts)
+      setDatedTasks(tasks.dated)
+      setUndatedTasks(tasks.undated)
+      setLoading(false)
+    })
+  }, [])
+
+  const fcEvents = [
+    ...toFullCalendarEvents(events),
+    ...taskNodesToFCEvents(datedTasks),
+  ]
 
   const today = new Date().toISOString().slice(0, 10)
   const todayEvents = events.filter((e) => e.date === today)
+  const todayTasks = datedTasks.filter(
+    (t) => t.startDate && t.startDate <= today && (!t.endDate || t.endDate >= today),
+  )
+
+  const hasSidebarItems =
+    todayEvents.length > 0 || todayTasks.length > 0 || undatedTasks.length > 0
 
   return (
     <section className="space-y-4">
-      <h1 className="lo-section-title">Calendar</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="lo-section-title">Calendar</h1>
+        <a
+          href="/lifeOS/calendar.ics"
+          download
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-dim transition-colors hover:bg-muted hover:text-heading"
+        >
+          <Download className="h-3.5 w-3.5" />
+          下载 ICS
+        </a>
+      </div>
 
-      {/* Today's events */}
-      {todayEvents.length > 0 && (
-        <div className="lo-card p-4">
-          <h2 className="text-sm font-semibold text-heading">今日事件（{today}）</h2>
-          <div className="mt-3 space-y-2">
-            {todayEvents.map((e) => {
-              const colors = CATEGORY_COLORS[e.category ?? 'other'] ?? CATEGORY_COLORS.other
-              return (
-                <div
-                  key={e.id}
-                  className={`flex items-center gap-3 rounded-md border ${colors.border} ${colors.bg} p-3`}
-                >
-                  <div className={`text-xs font-medium ${colors.text}`}>
-                    {e.startTime ?? '—'} – {e.endTime ?? '—'}
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-body">{e.title}</div>
-                    {e.location && <div className="text-xs text-dim">{e.location}</div>}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Calendar */}
-      <div className="lo-card lo-calendar p-2">
-        {loading ? (
-          <div className="flex items-center justify-center py-12 text-sm text-dim">加载中…</div>
-        ) : (
-          <FullCalendar
+      <div className={cn('gap-4', hasSidebarItems ? 'grid grid-cols-1 lg:grid-cols-[1fr_280px]' : '')}>
+        {/* Calendar */}
+        <div className="lo-card lo-calendar min-w-0 p-2">
+          {loading ? (
+            <div className="flex items-center justify-center py-12 text-sm text-dim">加载中…</div>
+          ) : (
+            <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
             initialView="timeGridThreeDay"
             views={{
@@ -127,10 +197,29 @@ export function CalendarPage() {
             height="auto"
             eventDisplay="block"
             eventClick={(info) => {
-              const evt = events.find((e) => e.id === info.event.id)
-              if (evt) setSelectedEvent(evt)
+              const id = info.event.id
+              // Check if it's a task event
+              if (id.startsWith('task-')) {
+                const task = datedTasks.find(
+                  (t) => `task-${t.projectSlug}-${t.id}` === id,
+                )
+                if (task) setSelected({ kind: 'task', data: task })
+              } else {
+                const evt = events.find((e) => e.id === id)
+                if (evt) setSelected({ kind: 'event', data: evt })
+              }
             }}
             eventContent={(arg) => {
+              const source = arg.event.extendedProps.source as string
+              if (source === 'task') {
+                const slug = arg.event.extendedProps.projectSlug as string
+                const colors = PROJECT_TASK_COLORS[slug] ?? DEFAULT_TASK_COLOR
+                return (
+                  <div className={`rounded px-1 py-0.5 text-xs ${colors.bg}`}>
+                    {arg.event.title}
+                  </div>
+                )
+              }
               const cat = arg.event.extendedProps.category as string
               const colors = CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.other
               const isPast = arg.event.end ? arg.event.end < new Date() : false
@@ -145,49 +234,192 @@ export function CalendarPage() {
                   ? 'fc-event-ongoing'
                   : 'fc-event-future'
               return (
-                <div
-                  className={`rounded px-1 py-0.5 text-xs ${colors.bg} ${stateClass}`}
-                >
+                <div className={`rounded px-1 py-0.5 text-xs ${colors.bg} ${stateClass}`}>
                   {arg.event.title}
                 </div>
               )
             }}
           />
         )}
+        </div>
+
+        {/* Sidebar: Today + Undated tasks */}
+        {hasSidebarItems && (
+          <aside className="lo-card space-y-4 overflow-y-auto p-4 lg:max-h-[calc(100vh-8rem)] lg:sticky lg:top-20">
+            {/* Today section */}
+            {(todayEvents.length > 0 || todayTasks.length > 0) && (
+              <div className="space-y-2">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">今日</h2>
+                {todayEvents.map((e) => {
+                  const colors = CATEGORY_COLORS[e.category ?? 'other'] ?? CATEGORY_COLORS.other
+                  return (
+                    <div
+                      key={e.id}
+                      className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
+                      onClick={() => setSelected({ kind: 'event', data: e })}
+                    >
+                      <div className={`text-[11px] font-medium ${colors.text}`}>
+                        {e.startTime ?? '—'}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-xs font-medium text-body">{e.title}</div>
+                        {e.location && <div className="truncate text-[11px] text-dim">{e.location}</div>}
+                      </div>
+                    </div>
+                  )
+                })}
+                {todayTasks.map((t) => {
+                  const colors = PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR
+                  return (
+                    <div
+                      key={`task-${t.projectSlug}-${t.id}`}
+                      className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
+                      onClick={() => setSelected({ kind: 'task', data: t })}
+                    >
+                      <FolderKanban className={`h-3 w-3 flex-shrink-0 ${colors.text}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-xs font-medium text-body">{t.title}</div>
+                        <div className="truncate text-[10px] text-dim">
+                          {t.projectSlug} · {t.status}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Undated tasks section */}
+            {undatedTasks.length > 0 && (
+              <div className="space-y-2">
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">
+                  无日期
+                  <span className="ml-1.5 text-placeholder">{undatedTasks.length}</span>
+                </h2>
+                {undatedTasks.map((t) => {
+                  const colors = PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR
+                  return (
+                    <div
+                      key={`task-${t.projectSlug}-${t.id}`}
+                      className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
+                      onClick={() => setSelected({ kind: 'task', data: t })}
+                    >
+                      <FolderKanban className={`h-3 w-3 flex-shrink-0 ${colors.text}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-xs font-medium text-body">{t.title}</div>
+                        <div className="truncate text-[10px] text-dim">
+                          {t.projectSlug} · {t.status}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </aside>
+        )}
       </div>
 
-      {/* Event detail modal */}
-      {selectedEvent && (
+      {/* Detail modal */}
+      {selected && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
-          onClick={() => setSelectedEvent(null)}
+          onClick={() => setSelected(null)}
         >
           <div
             className="lo-card mx-4 w-full max-w-md p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold text-heading">{selectedEvent.title}</h3>
-            <div className="mt-3 space-y-2 text-sm text-body">
-              <div>
-                <span className="text-dim">时间：</span>
-                {selectedEvent.startTime ?? '—'} – {selectedEvent.endTime ?? '—'}
-              </div>
-              {selectedEvent.location && (
-                <div>
-                  <span className="text-dim">地点：</span>
-                  {selectedEvent.location}
+            {selected.kind === 'event' ? (
+              <>
+                <h3 className="text-lg font-semibold text-heading">{selected.data.title}</h3>
+                <div className="mt-3 space-y-2 text-sm text-body">
+                  <div>
+                    <span className="text-dim">时间：</span>
+                    {selected.data.startTime ?? '—'} – {selected.data.endTime ?? '—'}
+                  </div>
+                  {selected.data.location && (
+                    <div>
+                      <span className="text-dim">地点：</span>
+                      {selected.data.location}
+                    </div>
+                  )}
+                  {selected.data.description && (
+                    <div>
+                      <span className="text-dim">备注：</span>
+                      {selected.data.description}
+                    </div>
+                  )}
+                  {dailySlugs.has(selected.data.date) && (
+                    <Link
+                      to={`/daily/${selected.data.date}`}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary-subtle px-3 py-1.5 text-xs font-medium text-primary-subtle-foreground transition-colors hover:bg-primary/20"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      查看当日日报
+                    </Link>
+                  )}
                 </div>
-              )}
-              {selectedEvent.description && (
-                <div>
-                  <span className="text-dim">备注：</span>
-                  {selectedEvent.description}
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <FolderKanban className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-semibold text-heading">{selected.data.title}</h3>
                 </div>
-              )}
-            </div>
+                <div className="mt-3 space-y-2 text-sm text-body">
+                  <div>
+                    <span className="text-dim">项目：</span>
+                    {selected.data.projectSlug}
+                  </div>
+                  <div>
+                    <span className="text-dim">状态：</span>
+                    {selected.data.status}
+                  </div>
+                  {selected.data.startDate && (
+                    <div>
+                      <span className="text-dim">时间：</span>
+                      <span className="font-mono">
+                        {selected.data.startDate}
+                        {selected.data.endDate ? ` → ${selected.data.endDate}` : ''}
+                      </span>
+                    </div>
+                  )}
+                  {selected.data.description && (
+                    <div>
+                      <span className="text-dim">描述：</span>
+                      {selected.data.description}
+                    </div>
+                  )}
+                  {selected.data.children && selected.data.children.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-placeholder">
+                        子任务 ({selected.data.children.filter((c) => c.status === 'completed').length}/{selected.data.children.length})
+                      </span>
+                      {selected.data.children.map((child) => (
+                        <div key={child.id} className="flex items-center gap-2 text-xs">
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              child.status === 'completed'
+                                ? 'bg-blue-500'
+                                : child.status === 'active'
+                                  ? 'bg-green-500'
+                                  : 'bg-zinc-400'
+                            }`}
+                          />
+                          <span className={child.status === 'completed' ? 'text-dim line-through' : 'text-body'}>
+                            {child.title}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
             <button
               className="mt-4 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
-              onClick={() => setSelectedEvent(null)}
+              onClick={() => setSelected(null)}
             >
               关闭
             </button>

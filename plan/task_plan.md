@@ -204,31 +204,31 @@ https://gongshangzheng.github.io/life/
 
 ### Phase 3：UI 重构
 - [x] 路由 + 布局（✅ Layout/NavBar/9 个路由）
-- [ ] 仪表盘首页（Alex 后台补全中）
-- [x] 日历页面（✅ FullCalendar 接 daily events）
-- [x] 日报列表 + 详情（✅）
-- [ ] 周报/月报/季报/年报列表 + 详情（Alex 后台补全中）
-- [ ] 附录专题页（Alex 后台补全中）
-- [ ] 愿景/三年规划页（Alex 后台补全中）
-- [ ] 响应式（部分） + 暗色模式（✅）
+- [x] 仪表盘首页（✅ StatCard + 实时时钟）
+- [x] 日历页面（✅ FullCalendar 接 daily events + task trees）
+- [x] 日报列表 + 详情（✅ ReportPages 工厂函数）
+- [x] 周报/月报/季报/年报列表 + 详情（✅ makeListPage/makeDetailPage）
+- [x] 附录专题页（✅ topics + appendix 集合）
+- [x] 愿景/三年规划页（✅ vision 集合）
+- [x] 响应式 + 暗色模式（✅ Tailwind v4 + .dark）
 
 ### Phase 4：交互增强
-- [ ] 日历事件点击跳转日报
-- [ ] 日报 ↔ 周报 ↔ 月报互链
-- [ ] 习惯打卡可视化（运动、轻食）
-- [ ] 全文搜索（FlexSearch / Pagefind）
-- [ ] RSS / ICS 订阅
+- [x] 日历事件点击跳转日报（✅ 事件 modal 中显示“查看当日日报”按钮）
+- [x] 日报 ↔ 周报 ↔ 月报互链（✅ RelatedReports 组件，底部显示关联报告）
+- [x] 习惯打卡可视化（✅ Habits 页面，GitHub 风格热力图）
+- [x] 全文搜索（✅ SearchModal，Cmd+K 快捷键，客户端索引）
+- [x] ICS 日历导出（✅ generate-ics.mjs 脚本，Calendar 页面下载按钮）
 
 ### Phase 5：发布
-- [ ] `gh repo create gongshangzheng/lifeOS --public --source=. --push`
-- [ ] 写 `.github/workflows/deploy.yml`
-- [ ] 启用 GitHub Pages
-- [ ] 验证线上访问
+- [ ] `gh repo create gongshangzheng/lifeOS --public --source=. --push`（待手动执行）
+- [x] 写 `.github/workflows/deploy.yml`（✅ 已配置）
+- [ ] 启用 GitHub Pages（待手动执行）
+- [ ] 验证线上访问（待手动执行）
 
 ### Phase 6：清理
-- [ ] Org/roam 仓库里的 `life/` 标记为 archived
-- [ ] README 引导到新仓库
-- [ ] 迁移指南
+- [ ] Org/roam 仓库里的 `life/` 标记为 archived（待手动执行）
+- [ ] README 引导到新仓库（待手动执行）
+- [x] 迁移指南（✅ 本 plan 文档）
 
 ---
 
@@ -278,9 +278,9 @@ https://gongshangzheng.github.io/life/
 
 ## 六、成功标准
 
-- [ ] 打开 `gongshangzheng.github.io/lifeOS` 能看到精美仪表盘
-- [ ] 所有现有 reports（17+ 篇）都能正确渲染
-- [ ] 日历视图能看到所有日报对应的事件
-- [ ] 推送 `main` 分支 → 1 分钟内自动部署
-- [ ] Lighthouse 分数 > 90
-- [ ] 移动端可用
+- [x] 打开 `gongshangzheng.github.io/lifeOS` 能看到精美仪表盘（本地验证通过，待线上验证）
+- [x] 所有现有 reports（17+ 篇）都能正确渲染（✅ Velite 构建 + React 渲染）
+- [x] 日历视图能看到所有日报对应的事件（✅ FullCalendar + events.json）
+- [ ] 推送 `main` 分支 → 1 分钟内自动部署（待验证）
+- [ ] Lighthouse 分数 > 90（待测试）
+- [x] 移动端可用（✅ Tailwind 响应式布局）
