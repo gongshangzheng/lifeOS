@@ -6,7 +6,7 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import type { EventInput } from '@fullcalendar/core'
 import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { FolderKanban, FileText, Download } from 'lucide-react'
+import { FolderKanban, FileText, Download, Check, Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getAllProjects, getProjectTasks, flattenDatedTasks, flattenUndatedTasks, getAllDaily, type TaskNode } from '@/content/loader'
 
@@ -98,6 +98,7 @@ export function CalendarPage() {
   const [undatedTasks, setUndatedTasks] = useState<Array<TaskNode & { projectSlug: string }>>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<SelectedItem | null>(null)
+  const [sidebarTab, setSidebarTab] = useState<'pending' | 'completed'>('pending')
 
   // Daily slugs for "view daily" links
   const dailySlugs = useMemo(() => {
@@ -145,8 +146,20 @@ export function CalendarPage() {
     (t) => t.startDate && t.startDate <= today && (!t.endDate || t.endDate >= today),
   )
 
-  const hasSidebarItems =
-    todayEvents.length > 0 || todayTasks.length > 0 || undatedTasks.length > 0
+  // Split tasks into pending vs completed
+  const pendingTodayTasks = todayTasks.filter((t) => t.status !== 'completed')
+  const completedTodayTasks = todayTasks.filter((t) => t.status === 'completed')
+
+  // Completed tasks from all dated tasks (recently completed, within last 30 days)
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  const completedDatedTasks = datedTasks.filter(
+    (t) => t.status === 'completed' && t.startDate && new Date(t.startDate) >= thirtyDaysAgo,
+  )
+
+  const hasPendingItems = todayEvents.length > 0 || pendingTodayTasks.length > 0 || undatedTasks.length > 0
+  const hasCompletedItems = completedTodayTasks.length > 0 || completedDatedTasks.length > 0
+  const hasSidebarItems = hasPendingItems || hasCompletedItems
 
   return (
     <section className="space-y-4">
@@ -247,82 +260,180 @@ export function CalendarPage() {
         )}
         </div>
 
-        {/* Sidebar: Today + Undated tasks */}
+        {/* Sidebar with tabs */}
         {hasSidebarItems && (
-          <aside className="lo-card space-y-4 overflow-y-auto p-4 lg:max-h-[calc(100vh-8rem)] lg:sticky lg:top-20">
-            {/* Today section */}
-            {(todayEvents.length > 0 || todayTasks.length > 0) && (
-              <div className="space-y-2">
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">今日</h2>
-                {todayEvents.map((e) => {
-                  const colors = CATEGORY_COLORS[e.category ?? 'other'] ?? CATEGORY_COLORS.other
-                  return (
-                    <div
-                      key={e.id}
-                      className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
-                      onClick={() => setSelected({ kind: 'event', data: e })}
-                    >
-                      <div className={`text-[11px] font-medium ${colors.text}`}>
-                        {e.startTime ?? '—'}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-xs font-medium text-body">{e.title}</div>
-                        {e.location && <div className="truncate text-[11px] text-dim">{e.location}</div>}
-                      </div>
-                    </div>
-                  )
-                })}
-                {todayTasks.map((t) => {
-                  const isCompleted = t.status === 'completed'
-                  const colors = isCompleted
-                    ? { bg: 'bg-zinc-500/15', border: 'border-zinc-500/30', text: 'text-zinc-400' }
-                    : (PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR)
-                  return (
-                    <div
-                      key={`task-${t.projectSlug}-${t.id}`}
-                      className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80 ${isCompleted ? 'opacity-60' : ''}`}
-                      onClick={() => setSelected({ kind: 'task', data: t })}
-                    >
-                      <FolderKanban className={`h-3 w-3 flex-shrink-0 ${colors.text}`} />
-                      <div className="min-w-0 flex-1">
-                        <div className={`truncate text-xs font-medium text-body ${isCompleted ? 'line-through' : ''}`}>{t.title}</div>
-                        <div className="truncate text-[10px] text-dim">
-                          {t.projectSlug} · {t.status}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+          <aside className="lo-card overflow-y-auto lg:max-h-[calc(100vh-8rem)] lg:sticky lg:top-20">
+            {/* Tab headers */}
+            <div className="flex border-b border-border">
+              <button
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors ${
+                  sidebarTab === 'pending'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-dim hover:text-body'
+                }`}
+                onClick={() => setSidebarTab('pending')}
+              >
+                <Circle className="h-3 w-3" />
+                待办
+                {hasPendingItems && (
+                  <span className="ml-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] text-primary">
+                    {todayEvents.length + pendingTodayTasks.length + undatedTasks.length}
+                  </span>
+                )}
+              </button>
+              <button
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors ${
+                  sidebarTab === 'completed'
+                    ? 'text-green-500 border-b-2 border-green-500'
+                    : 'text-dim hover:text-body'
+                }`}
+                onClick={() => setSidebarTab('completed')}
+              >
+                <Check className="h-3 w-3" />
+                已完成
+                {hasCompletedItems && (
+                  <span className="ml-0.5 rounded-full bg-green-500/15 px-1.5 py-0.5 text-[10px] text-green-500">
+                    {completedTodayTasks.length + completedDatedTasks.length}
+                  </span>
+                )}
+              </button>
+            </div>
 
-            {/* Undated tasks section */}
-            {undatedTasks.length > 0 && (
-              <div className="space-y-2">
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">
-                  无日期
-                  <span className="ml-1.5 text-placeholder">{undatedTasks.length}</span>
-                </h2>
-                {undatedTasks.map((t) => {
-                  const colors = PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR
-                  return (
-                    <div
-                      key={`task-${t.projectSlug}-${t.id}`}
-                      className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
-                      onClick={() => setSelected({ kind: 'task', data: t })}
-                    >
-                      <FolderKanban className={`h-3 w-3 flex-shrink-0 ${colors.text}`} />
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-xs font-medium text-body">{t.title}</div>
-                        <div className="truncate text-[10px] text-dim">
-                          {t.projectSlug} · {t.status}
-                        </div>
-                      </div>
+            <div className="space-y-4 p-4">
+              {/* Pending tab */}
+              {sidebarTab === 'pending' && (
+                <>
+                  {/* Today section */}
+                  {(todayEvents.length > 0 || pendingTodayTasks.length > 0) && (
+                    <div className="space-y-2">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">今日</h2>
+                      {todayEvents.map((e) => {
+                        const colors = CATEGORY_COLORS[e.category ?? 'other'] ?? CATEGORY_COLORS.other
+                        return (
+                          <div
+                            key={e.id}
+                            className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
+                            onClick={() => setSelected({ kind: 'event', data: e })}
+                          >
+                            <div className={`text-[11px] font-medium ${colors.text}`}>
+                              {e.startTime ?? '—'}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs font-medium text-body">{e.title}</div>
+                              {e.location && <div className="truncate text-[11px] text-dim">{e.location}</div>}
+                            </div>
+                          </div>
+                        )
+                      })}
+                      {pendingTodayTasks.map((t) => {
+                        const colors = PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR
+                        return (
+                          <div
+                            key={`task-${t.projectSlug}-${t.id}`}
+                            className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
+                            onClick={() => setSelected({ kind: 'task', data: t })}
+                          >
+                            <FolderKanban className={`h-3 w-3 flex-shrink-0 ${colors.text}`} />
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs font-medium text-body">{t.title}</div>
+                              <div className="truncate text-[10px] text-dim">
+                                {t.projectSlug} · {t.status}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
-                  )
-                })}
-              </div>
-            )}
+                  )}
+
+                  {/* Undated tasks section */}
+                  {undatedTasks.length > 0 && (
+                    <div className="space-y-2">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">
+                        无日期
+                        <span className="ml-1.5 text-placeholder">{undatedTasks.length}</span>
+                      </h2>
+                      {undatedTasks.map((t) => {
+                        const colors = PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR
+                        return (
+                          <div
+                            key={`task-${t.projectSlug}-${t.id}`}
+                            className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
+                            onClick={() => setSelected({ kind: 'task', data: t })}
+                          >
+                            <FolderKanban className={`h-3 w-3 flex-shrink-0 ${colors.text}`} />
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs font-medium text-body">{t.title}</div>
+                              <div className="truncate text-[10px] text-dim">
+                                {t.projectSlug} · {t.status}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {!hasPendingItems && (
+                    <div className="py-8 text-center text-xs text-dim">暂无待办事项</div>
+                  )}
+                </>
+              )}
+
+              {/* Completed tab */}
+              {sidebarTab === 'completed' && (
+                <>
+                  {/* Today completed */}
+                  {completedTodayTasks.length > 0 && (
+                    <div className="space-y-2">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">今日完成</h2>
+                      {completedTodayTasks.map((t) => (
+                        <div
+                          key={`task-${t.projectSlug}-${t.id}`}
+                          className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-500/30 bg-zinc-500/15 p-2.5 opacity-70 transition-colors hover:opacity-90"
+                          onClick={() => setSelected({ kind: 'task', data: t })}
+                        >
+                          <Check className="h-3 w-3 flex-shrink-0 text-green-500" />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-xs font-medium text-body line-through">{t.title}</div>
+                            <div className="truncate text-[10px] text-dim">{t.projectSlug}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Recently completed (last 30 days) */}
+                  {completedDatedTasks.length > 0 && (
+                    <div className="space-y-2">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">
+                        近期完成
+                        <span className="ml-1.5 text-placeholder">{completedDatedTasks.length}</span>
+                      </h2>
+                      {completedDatedTasks.map((t) => (
+                        <div
+                          key={`task-${t.projectSlug}-${t.id}`}
+                          className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-500/30 bg-zinc-500/15 p-2.5 opacity-70 transition-colors hover:opacity-90"
+                          onClick={() => setSelected({ kind: 'task', data: t })}
+                        >
+                          <Check className="h-3 w-3 flex-shrink-0 text-green-500" />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-xs font-medium text-body line-through">{t.title}</div>
+                            <div className="truncate text-[10px] text-dim">
+                              {t.projectSlug} · {t.startDate}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {!hasCompletedItems && (
+                    <div className="py-8 text-center text-xs text-dim">暂无已完成事项</div>
+                  )}
+                </>
+              )}
+            </div>
           </aside>
         )}
       </div>
