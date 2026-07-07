@@ -68,7 +68,9 @@
         { "id": "t3-1", "title": "人脸 matting 前置处理", "status": "active", "startDate": null, "endDate": null, "description": "PSNR 等指标需先做人脸 matting 再测，否则对 3DGS 等无背景算法不公平", "children": [] },
         { "id": "t3-2", "title": "Wave2Lip 唇同步异常排查", "status": "active", "startDate": null, "endDate": null, "description": "之前测试 Wave2Lip 唇同步分数最高，结果可疑，需复验", "children": [] },
         { "id": "t3-3", "title": "无参视频质量评测模型调研", "status": "active", "startDate": null, "endDate": null, "description": "除 TOPIQ 外调研更多 no-reference 视频质量评测模型，补充有参方案对照", "children": [] },
-        { "id": "t3-4", "title": "输出一版完整评测结果", "status": "planned", "startDate": null, "endDate": null, "description": "优化完成后对所有模型进行一次完整评测", "children": [] }
+        { "id": "t3-4", "title": "输出一版完整评测结果", "status": "planned", "startDate": null, "endDate": null, "description": "优化完成后对所有模型进行一次完整评测", "children": [] },
+        { "id": "t3-5", "title": "合并代码", "status": "active", "startDate": "2026-07-07", "endDate": null, "description": "合并各分支代码到主分支", "children": [] },
+        { "id": "t3-6", "title": "跑通评测代码全流程", "status": "active", "startDate": "2026-07-07", "endDate": null, "description": "端到端跑通评测代码的完整流程，验证各环节可用", "children": [] }
       ]
     },
     {
@@ -80,7 +82,8 @@
       "description": "近实时和非实时数字人模型的部署和效果测试",
       "children": [
         { "id": "t4-1", "title": "近实时模型部署", "status": "planned", "startDate": null, "endDate": null, "description": "近实时数字人模型部署与效果测试", "children": [] },
-        { "id": "t4-2", "title": "非实时模型部署", "status": "planned", "startDate": null, "endDate": null, "description": "非实时数字人模型部署与效果测试", "children": [] }
+        { "id": "t4-2", "title": "非实时模型部署", "status": "planned", "startDate": null, "endDate": null, "description": "非实时数字人模型部署与效果测试", "children": [] },
+        { "id": "t4-3", "title": "搜集近实时数字人项目并封装到评测框架", "status": "active", "startDate": "2026-07-07", "endDate": null, "description": "搜集近实时数字人开源项目，进行适配封装，补充到现有评测框架中", "children": [] }
       ]
     },
     {
