@@ -9,13 +9,14 @@
 //   node scripts/generate-report.mjs quarterly [--date YYYY-QN]
 // ============================================================
 
-import { writeFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { writeFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const CONTENT_DIR = resolve(__dirname, '../apps/web/content')
 const EVENTS_FILE = resolve(__dirname, '../apps/web/public/events.json')
+const PROJECTS_DIR = join(CONTENT_DIR, 'projects')
 
 // ── Recurring task expansion ─────────────────────────────────
 
@@ -77,7 +78,88 @@ function formatRecurringDaily(dateStr) {
     const desc = t.description ? ' — ' + t.description : ''
     return '- [ ] ' + time + ' ' + t.title + desc
   })
-  return '\n---\n\n## 定期任务\n\n' + lines.join('\n') + '\n'
+  return lines.join('\n')
+}
+
+// ── Project recurring & undated tasks ────────────────────────
+
+function loadAllProjectTrees() {
+  const trees = []
+  try {
+    const dirs = readdirSync(PROJECTS_DIR, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+    for (const slug of dirs) {
+      const tasksPath = join(PROJECTS_DIR, slug, 'tasks.json')
+      if (existsSync(tasksPath)) {
+        try {
+          trees.push({ slug, tree: JSON.parse(readFileSync(tasksPath, 'utf-8')) })
+        } catch { /* skip invalid */ }
+      }
+    }
+  } catch { /* skip */ }
+  return trees
+}
+
+function findProjectRecurring(reportLevel) {
+  const trees = loadAllProjectTrees()
+  const result = []
+  for (const { slug, tree } of trees) {
+    const tasks = tree.tasks || []
+    ;(function find(nodes) {
+      for (const t of nodes) {
+        if (t.recurring && t.recurring.reportLevels && t.recurring.reportLevels.includes(reportLevel)) {
+          result.push({ ...t, projectSlug: slug })
+        }
+        if (t.children && t.children.length > 0) find(t.children)
+      }
+    })(tasks)
+  }
+  return result
+}
+
+function findUndatedTasks() {
+  const trees = loadAllProjectTrees()
+  const result = []
+  for (const { slug, tree } of trees) {
+    const tasks = tree.tasks || []
+    ;(function find(nodes) {
+      for (const t of nodes) {
+        if (
+          t.children.length === 0 &&
+          !t.startDate &&
+          t.status !== 'completed'
+        ) {
+          result.push({ ...t, projectSlug: slug })
+        }
+        if (t.children && t.children.length > 0) find(t.children)
+      }
+    })(tasks)
+  }
+  return result
+}
+
+function formatProjectRecurring(reportLevel) {
+  const tasks = findProjectRecurring(reportLevel)
+  if (tasks.length === 0) return ''
+  const lines = tasks.map((t) => {
+    const r = t.recurring
+    const freq = r.pattern === 'daily' ? '每日' : r.pattern === 'weekly' ? '每周' : '每' + (r.every || 3) + '天'
+    const time = r.startTime ? r.startTime + (r.endTime ? '-' + r.endTime : '') + ' ' : ''
+    const desc = t.description ? ' — ' + t.description : ''
+    return '- [ ] ' + time + t.title + ' (' + freq + ', ' + t.projectSlug + ')' + desc
+  })
+  return lines.join('\n')
+}
+
+function formatUndatedTasks() {
+  const tasks = findUndatedTasks()
+  if (tasks.length === 0) return ''
+  const lines = tasks.map((t) => {
+    const desc = t.description ? ' — ' + t.description : ''
+    return '- [ ] ' + t.title + ' (' + t.projectSlug + ', ' + t.status + ')' + desc
+  })
+  return lines.join('\n')
 }
 
 function formatRecurringWeekly(fromDate, toDate) {
@@ -95,7 +177,7 @@ function formatRecurringWeekly(fromDate, toDate) {
     const desc = t.description ? ' — ' + t.description : ''
     return '- [ ] ' + t.title + ' (' + freq + ', 本周' + count + '次)' + desc
   })
-  return `\n---\n\n## 定期任务\n\n${lines.join('\n')}\n`
+  return lines.join('\n')
 }
 
 function formatRecurringMonthly(monthStr) {
@@ -115,7 +197,7 @@ function formatRecurringMonthly(monthStr) {
     const desc = t.description ? ' — ' + t.description : ''
     return '- [ ] ' + t.title + ' (' + freq + ', 本月' + t.count + '次)' + desc
   })
-  return `\n---\n\n## 定期任务\n\n${lines.join('\n')}\n`
+  return lines.join('\n')
 }
 
 const DIRS = {
@@ -184,6 +266,19 @@ function generateDaily(dateStr) {
   const summary = `上层： [${monthStr} 月报](../4-monthly/${monthStr}.md) ｜ [${weekSlug} 周报](../5-weekly/${weekSlug}.md) 同层连续： [前一天日报](../6-daily/${fmtDate(prev)}.md) ｜ [后一天日报](../6-daily/${fmtDate(next)}.md)`
 
   const recurringSection = formatRecurringDaily(dateStr_)
+  const projectRecurring = formatProjectRecurring('daily')
+  const undatedSection = formatUndatedTasks()
+
+  // Build recurring tasks section (events.json + project recurring)
+  const recurringParts = [recurringSection, projectRecurring].filter(Boolean)
+  const recurringBlock = recurringParts.length > 0
+    ? '\n---\n\n## 定期任务\n\n' + recurringParts.join('\n') + '\n'
+    : ''
+
+  // Build undated tasks section
+  const undatedBlock = undatedSection
+    ? '\n---\n\n## 待安排\n\n' + undatedSection + '\n'
+    : ''
 
   const content = `---
 title: "${title}"
@@ -217,7 +312,7 @@ tags:
 
 | 时间 | 事项 | 日历 | 说明 |
 |------|------|------|------|
-|      |      |      |      |${recurringSection}
+|      |      |      |      |${recurringBlock}${undatedBlock}
 ---
 
 ## 规划
@@ -289,6 +384,18 @@ function generateWeekly(dateStr) {
   const title = `周报 - ${monday.getFullYear()}年${monday.getMonth() + 1}月第${weekNum}周 (${mondayStr} - ${sundayStr})`
   const summary = `上层： [${monthStr} 月报](../4-monthly/${monthStr}.md) ｜ [${quarterStr} 季报](../3-quarterly/${quarterStr}.md)`
 
+  // Build recurring + undated sections for weekly
+  const weeklyRecurring = formatRecurringWeekly(fmtDate(monday), fmtDate(sunday))
+  const weeklyProjectRecurring = formatProjectRecurring('weekly')
+  const recurringParts = [weeklyRecurring, weeklyProjectRecurring].filter(Boolean)
+  const recurringBlock = recurringParts.length > 0
+    ? '\n---\n\n## 定期任务\n\n' + recurringParts.join('\n') + '\n'
+    : ''
+  const undatedSection = formatUndatedTasks()
+  const undatedBlock = undatedSection
+    ? '\n---\n\n## 待安排\n\n' + undatedSection + '\n'
+    : ''
+
   const content = `---
 title: "${title}"
 slug: "${weekSlug}"
@@ -329,7 +436,7 @@ weekNumber: ${weekNum}
 - [ ] 
 
 ### 社交/感情
-- [ ] ${formatRecurringWeekly(fmtDate(monday), fmtDate(sunday))}
+- [ ] ${recurringBlock}${undatedBlock}
 `
 
   return {
@@ -347,6 +454,18 @@ function generateMonthly(dateStr) {
 
   const title = `月报 - ${date.getFullYear()}年${date.getMonth() + 1}月`
   const summary = `上层： [${quarterStr} 季报](../3-quarterly/${quarterStr}.md) ｜ [${date.getFullYear()} 年报](../2-annual/${date.getFullYear()}.md)`
+
+  // Build recurring + undated sections for monthly
+  const monthlyRecurring = formatRecurringMonthly(monthStr)
+  const monthlyProjectRecurring = formatProjectRecurring('monthly')
+  const recurringParts = [monthlyRecurring, monthlyProjectRecurring].filter(Boolean)
+  const recurringBlock = recurringParts.length > 0
+    ? '\n---\n\n## 定期任务\n\n' + recurringParts.join('\n') + '\n'
+    : ''
+  const undatedSection = formatUndatedTasks()
+  const undatedBlock = undatedSection
+    ? '\n---\n\n## 待安排\n\n' + undatedSection + '\n'
+    : ''
 
   const content = `---
 title: "${title}"
@@ -378,7 +497,7 @@ tags:
 ### 阶段划分
 - [ ] 上旬：
 - [ ] 中旬：
-- [ ] 下旬：${formatRecurringMonthly(monthStr)}
+- [ ] 下旬：${recurringBlock}${undatedBlock}
 ## 关键数据
 
 | 维度 | 目标 | 实际 |

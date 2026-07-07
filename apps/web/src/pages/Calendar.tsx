@@ -8,7 +8,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { FolderKanban, FileText, Download, Check, Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getAllProjects, getProjectTasks, flattenDatedTasks, flattenUndatedTasks, getAllDaily, type TaskNode } from '@/content/loader'
+import { getAllProjects, getProjectTasks, flattenDatedTasks, flattenUndatedTasks, findRecurringTasks, getAllDaily, type TaskNode, type RecurringConfig } from '@/content/loader'
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -143,6 +143,45 @@ type SelectedItem =
   | { kind: 'event'; data: CalendarEvent }
   | { kind: 'task'; data: TaskNode & { projectSlug: string } }
 
+/** Expand project recurring tasks into CalendarEvent[] */
+function expandProjectRecurring(
+  tasks: Array<TaskNode & { projectSlug: string }>,
+  fromDate: string,
+  toDate: string,
+): CalendarEvent[] {
+  const result: CalendarEvent[] = []
+  for (const t of tasks) {
+    const r = t.recurring as RecurringConfig | undefined
+    if (!r) continue
+    const activeFrom = r.activeFrom || fromDate
+    const start = new Date(Math.max(new Date(fromDate).getTime(), new Date(activeFrom).getTime()))
+    const end = r.activeUntil
+      ? new Date(Math.min(new Date(toDate).getTime(), new Date(r.activeUntil).getTime()))
+      : new Date(toDate)
+    const excludeSet = new Set(r.excludeDates || [])
+    let current = new Date(start)
+    while (current <= end) {
+      const ds = current.toISOString().slice(0, 10)
+      if (!excludeSet.has(ds)) {
+        result.push({
+          id: `ptask-${t.projectSlug}-${t.id}-${ds}`,
+          title: `[${t.projectSlug}] ${t.title}`,
+          date: ds,
+          startTime: r.startTime,
+          endTime: r.endTime,
+          category: 'work',
+          description: t.description ?? '',
+        })
+      }
+      if (r.pattern === 'daily') current.setDate(current.getDate() + 1)
+      else if (r.pattern === 'weekly') current.setDate(current.getDate() + 7)
+      else if (r.pattern === 'every-N-days') current.setDate(current.getDate() + (r.every || 3))
+      else break
+    }
+  }
+  return result
+}
+
 // ── Component ────────────────────────────────────────────────
 
 export function CalendarPage() {
@@ -184,19 +223,23 @@ export function CalendarPage() {
     const loadTasks = Promise.all(
       projects.map(async (p) => {
         const tree = await getProjectTasks(p.slug)
-        if (!tree) return { dated: [] as Array<TaskNode & { projectSlug: string }>, undated: [] as Array<TaskNode & { projectSlug: string }> }
+        if (!tree) return { dated: [] as Array<TaskNode & { projectSlug: string }>, undated: [] as Array<TaskNode & { projectSlug: string }>, recurring: [] as Array<TaskNode & { projectSlug: string }> }
         return {
           dated: flattenDatedTasks(tree.tasks, p.slug),
           undated: flattenUndatedTasks(tree.tasks, p.slug),
+          recurring: findRecurringTasks(tree.tasks, p.slug),
         }
       }),
     ).then((results) => ({
       dated: results.flatMap((r) => r.dated),
       undated: results.flatMap((r) => r.undated),
+      recurring: results.flatMap((r) => r.recurring),
     }))
 
     Promise.all([loadEvents, loadTasks]).then(([evts, tasks]) => {
-      setEvents(evts)
+      // Expand project recurring tasks into calendar events
+      const projectRecurringEvents = expandProjectRecurring(tasks.recurring, rangeStartStr, rangeEndStr)
+      setEvents([...evts, ...projectRecurringEvents])
       setDatedTasks(tasks.dated)
       setUndatedTasks(tasks.undated)
       setLoading(false)

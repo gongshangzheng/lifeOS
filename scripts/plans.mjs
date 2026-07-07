@@ -632,6 +632,181 @@ function cmdTaskAdd(args) {
   console.log(`✅ 已添加任务: ${newTask.title} (ID: ${newId})  → 父任务: ${parent.title}`)
 }
 
+// ── Recurring task management ─────────────────────────────────
+
+function cmdRecurringAdd(args) {
+  if (!args.project || !args.title || !args.pattern || !args['report-levels']) {
+    console.error('错误: --project, --title, --pattern, --report-levels 为必填项')
+    console.error('用法: node scripts/plans.mjs recurring-add --project slug --title "..." --pattern daily --report-levels daily,weekly')
+    process.exit(1)
+  }
+
+  const validPatterns = ['daily', 'weekly', 'every-N-days']
+  if (!validPatterns.includes(args.pattern)) {
+    console.error('错误: --pattern 必须是 ' + validPatterns.join(', ') + ' 之一')
+    process.exit(1)
+  }
+
+  if (args.pattern === 'every-N-days' && !args.every) {
+    console.error('错误: --pattern every-N-days 需要 --every N 参数')
+    process.exit(1)
+  }
+
+  const reportLevels = args['report-levels'].split(',').map((s) => s.trim())
+  const validLevels = ['daily', 'weekly', 'monthly', 'quarterly']
+  for (const lvl of reportLevels) {
+    if (!validLevels.includes(lvl)) {
+      console.error('错误: report-level 值无效: ' + lvl + ' (可选: ' + validLevels.join(', ') + ')')
+      process.exit(1)
+    }
+  }
+
+  const tree = loadTaskTree(args.project)
+  if (!tree) {
+    console.error('错误: 找不到项目 ' + args.project)
+    process.exit(1)
+  }
+
+  // Find parent or use top-level
+  let parent = null
+  if (args.parent) {
+    parent = findTaskById(tree.tasks, args.parent)
+    if (!parent) {
+      console.error('错误: 找不到父任务 ' + args.parent)
+      process.exit(1)
+    }
+  }
+
+  // Generate ID
+  const existingIds = new Set()
+  collectIds(tree.tasks, existingIds)
+  let maxNum = 0
+  for (const id of existingIds) {
+    if (id.startsWith('r-')) {
+      const num = parseInt(id.slice(2), 10)
+      if (num > maxNum) maxNum = num
+    }
+  }
+  const newId = 'r-' + (maxNum + 1)
+
+  const recurringTask = {
+    id: newId,
+    title: args.title,
+    status: 'active',
+    startDate: null,
+    endDate: null,
+    description: args.description || '',
+    recurring: {
+      pattern: args.pattern,
+      every: args.every ? parseInt(args.every, 10) : undefined,
+      startTime: args.start || undefined,
+      endTime: args.end || undefined,
+      activeFrom: args.from || new Date().toISOString().slice(0, 10),
+      activeUntil: args.until || null,
+      excludeDates: [],
+      reportLevels: reportLevels,
+    },
+    children: [],
+  }
+
+  if (parent) {
+    parent.children.push(recurringTask)
+  } else {
+    tree.tasks.push(recurringTask)
+  }
+
+  // Save without cascade (raw data)
+  const rawTree = JSON.parse(readFileSync(join(DIRS.projects, args.project, 'tasks.json'), 'utf-8'))
+  if (parent) {
+    const rawParent = findTaskById(rawTree.tasks, args.parent)
+    rawParent.children.push(recurringTask)
+  } else {
+    rawTree.tasks.push(recurringTask)
+  }
+  saveTaskTree(args.project, rawTree)
+
+  console.log('✅ 已添加周期任务: ' + recurringTask.title)
+  console.log('   ID: ' + newId)
+  console.log('   项目: ' + args.project)
+  console.log('   频率: ' + args.pattern + (args.every ? ' (每' + args.every + '天)' : ''))
+  console.log('   报告层级: ' + reportLevels.join(', '))
+  if (args.start) console.log('   时间: ' + args.start + (args.end ? ' - ' + args.end : ''))
+}
+
+function cmdRecurringList(args) {
+  if (!args.project) {
+    // List recurring tasks across all projects
+    const projects = listAvailableTaskTrees()
+    let found = false
+    for (const slug of projects) {
+      const tree = loadTaskTree(slug)
+      if (!tree) continue
+      const recurring = [];
+      (function find(tasks) {
+        for (const t of tasks) {
+          if (t.recurring) recurring.push(t)
+          if (t.children && t.children.length > 0) find(t.children)
+        }
+      })(tree.tasks)
+      if (recurring.length > 0) {
+        found = true
+        console.log('\n── ' + slug + ' ──')
+        for (const t of recurring) {
+          const r = t.recurring
+          console.log('  ' + t.id + ' ' + t.title)
+          console.log('    频率: ' + r.pattern + (r.every ? ' (每' + r.every + '天)' : ''))
+          console.log('    报告: ' + r.reportLevels.join(', '))
+          if (r.startTime) console.log('    时间: ' + r.startTime + (r.endTime ? ' - ' + r.endTime : ''))
+        }
+      }
+    }
+    if (!found) console.log('没有找到周期任务。')
+    return
+  }
+
+  const tree = loadTaskTree(args.project)
+  if (!tree) {
+    console.error('错误: 找不到项目 ' + args.project)
+    process.exit(1)
+  }
+  const recurring = [];
+  (function find(tasks) {
+    for (const t of tasks) {
+      if (t.recurring) recurring.push(t)
+      if (t.children && t.children.length > 0) find(t.children)
+    }
+  })(tree.tasks)
+  if (recurring.length === 0) {
+    console.log('项目 ' + args.project + ' 没有周期任务。')
+    return
+  }
+  for (const t of recurring) {
+    const r = t.recurring
+    console.log(t.id + ' ' + t.title)
+    console.log('  频率: ' + r.pattern + (r.every ? ' (每' + r.every + '天)' : ''))
+    console.log('  报告: ' + r.reportLevels.join(', '))
+    if (r.startTime) console.log('  时间: ' + r.startTime + (r.endTime ? ' - ' + r.endTime : ''))
+  }
+}
+
+function collectIds(tasks, set) {
+  for (const t of tasks) {
+    set.add(t.id)
+    if (t.children && t.children.length > 0) collectIds(t.children, set)
+  }
+}
+
+function findTaskById(tasks, id) {
+  for (const t of tasks) {
+    if (t.id === id) return t
+    if (t.children && t.children.length > 0) {
+      const found = findTaskById(t.children, id)
+      if (found) return found
+    }
+  }
+  return null
+}
+
 // ── Main ─────────────────────────────────────────────────────
 
 const [, , command, ...rest] = process.argv
@@ -668,6 +843,12 @@ switch (command) {
   case 'task-add':
     cmdTaskAdd(args)
     break
+  case 'recurring-add':
+    cmdRecurringAdd(args)
+    break
+  case 'recurring-list':
+    cmdRecurringList(args)
+    break
   default:
     console.log(`
 lifeOS Plans CLI — 快速列出项目与各级计划
@@ -686,6 +867,8 @@ lifeOS Plans CLI — 快速列出项目与各级计划
   tasks         列出任务树           [--project slug]
   task-update   更新任务状态         --project slug --task-id id --status completed
   task-add      添加子任务           --project slug --parent id --title "..." [--status active]
+  recurring-add 添加周期任务         --project slug --title "..." --pattern daily|weekly|every-N-days --report-levels daily,weekly [--every N] [--start HH:MM] [--end HH:MM] [--from YYYY-MM-DD] [--until YYYY-MM-DD] [--parent id]
+  recurring-list 列出周期任务         [--project slug]
 
 示例:
   node scripts/plans.mjs overview
@@ -698,6 +881,8 @@ lifeOS Plans CLI — 快速列出项目与各级计划
   node scripts/plans.mjs tasks --project dingtalk-digital-human
   node scripts/plans.mjs task-update --project lifeos --task-id t1-1 --status completed
   node scripts/plans.mjs task-add --project dingtalk-digital-human --parent t3 --title "新任务"
+  node scripts/plans.mjs recurring-add --project lifeos --title "每日代码提交" --pattern daily --report-levels daily,weekly
+  node scripts/plans.mjs recurring-list
 `)
     break
 }

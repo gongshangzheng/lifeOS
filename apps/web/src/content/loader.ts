@@ -72,6 +72,20 @@ export const getProjectBySlug = (slug: string): Projects | undefined =>
 
 export type TaskStatus = 'active' | 'completed' | 'planned' | 'blocked' | 'paused'
 
+export type ReportLevel = 'daily' | 'weekly' | 'monthly' | 'quarterly'
+
+export interface RecurringConfig {
+  pattern: 'daily' | 'weekly' | 'every-N-days'
+  every?: number
+  startTime?: string
+  endTime?: string
+  activeFrom?: string
+  activeUntil?: string | null
+  excludeDates?: string[]
+  /** Which report levels should this recurring task appear in */
+  reportLevels: ReportLevel[]
+}
+
 export interface TaskNode {
   id: string
   title: string
@@ -83,6 +97,8 @@ export interface TaskNode {
   description?: string
   /** Path to a markdown note file, relative to project folder (e.g. "notes/task-detail.md") */
   notePath?: string
+  /** Recurring task configuration — when set, this task repeats on a schedule */
+  recurring?: RecurringConfig
   children: TaskNode[]
 }
 
@@ -162,6 +178,37 @@ export function flattenUndatedTasks(
     }
     if (t.children.length > 0) {
       result.push(...flattenUndatedTasks(t.children, projectSlug))
+    }
+  }
+  return result
+}
+
+/** Find all recurring tasks in a tree (recursive) */
+export function findRecurringTasks(
+  tasks: TaskNode[],
+  projectSlug: string,
+): Array<TaskNode & { projectSlug: string }> {
+  const result: Array<TaskNode & { projectSlug: string }> = []
+  for (const t of tasks) {
+    if (t.recurring) result.push({ ...t, projectSlug })
+    if (t.children.length > 0) {
+      result.push(...findRecurringTasks(t.children, projectSlug))
+    }
+  }
+  return result
+}
+
+/** Flatten all leaf tasks (any status, any date) for report generation */
+export function flattenAllLeafTasks(
+  tasks: TaskNode[],
+  projectSlug: string,
+): Array<TaskNode & { projectSlug: string }> {
+  const result: Array<TaskNode & { projectSlug: string }> = []
+  for (const t of tasks) {
+    if (t.children.length === 0) {
+      result.push({ ...t, projectSlug })
+    } else {
+      result.push(...flattenAllLeafTasks(t.children, projectSlug))
     }
   }
   return result
