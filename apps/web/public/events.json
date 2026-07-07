@@ -88,27 +88,14 @@
   ],
   "recurring": [
     {
-      "id": "recur-run-daily",
-      "title": "跑步 6km",
+      "id": "recur-fitness-daily",
+      "title": "健身",
       "pattern": "daily",
-      "startTime": "06:30",
-      "endTime": "07:15",
-      "location": "",
-      "category": "health",
-      "description": "每日跑步 6 千米",
-      "activeFrom": "2026-06-01",
-      "activeUntil": null,
-      "excludeDates": []
-    },
-    {
-      "id": "recur-gym",
-      "title": "健身房",
-      "pattern": "every-3-days",
-      "startTime": "18:00",
-      "endTime": "19:30",
+      "startTime": "18:30",
+      "endTime": "20:30",
       "location": "健身房",
       "category": "health",
-      "description": "每 2-3 天去一次健身房",
+      "description": "每日健身训练",
       "activeFrom": "2026-06-01",
       "activeUntil": null,
       "excludeDates": []
