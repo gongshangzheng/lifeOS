@@ -44,6 +44,47 @@ function StatCard({ label, value, hint }: { label: string; value: ReactNode; hin
   )
 }
 
+// ── Report Card (clickable link to a report) ────────────────
+
+interface ReportLike {
+  slug: string
+  title: string
+  date?: string
+}
+
+function ReportCard({
+  label,
+  report,
+  to,
+}: {
+  label: string
+  report: ReportLike | undefined
+  to: (slug: string) => string
+}) {
+  if (!report) {
+    return <StatCard label={label} value="—" />
+  }
+  return (
+    <Link
+      to={to(report.slug)}
+      className="lo-card lo-card-hover group block p-4 transition-colors hover:border-primary/50"
+    >
+      <div className="text-[11px] uppercase tracking-wider text-dim">{label}</div>
+      <div className="mt-1.5 flex items-start justify-between gap-2">
+        <span className="lo-clamp-2 text-sm font-semibold text-heading group-hover:text-primary-hover">
+          {report.title}
+        </span>
+        <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-dim group-hover:text-primary" />
+      </div>
+      {report.date && (
+        <div className="mt-1 font-mono text-[11px] text-dim">
+          {report.date.slice(0, 10)}
+        </div>
+      )}
+    </Link>
+  )
+}
+
 // ── Quick Nav Card ───────────────────────────────────────────
 
 function QuickNavCard({
@@ -228,18 +269,28 @@ export function Home() {
   const stats = useMemo(() => {
     const daily = getAllDaily()
     const weekly = getAllWeekly()
+    const monthly = getAllMonthly()
+    const quarterly = getAllQuarterly()
+    const annual = getAllAnnual()
     const monthlyCount = daily.filter((d) => d.date?.startsWith(ym)).length
-    const latest = daily[0]
-    const latestWeekly = weekly[0]
     const total =
       daily.length +
       weekly.length +
-      getAllMonthly().length +
-      getAllQuarterly().length +
-      getAllAnnual().length +
+      monthly.length +
+      quarterly.length +
+      annual.length +
       getAllVision().length +
       getAllAppendix().length
-    return { monthlyCount, latest, total, dailyTotal: daily.length, latestWeekly }
+    return {
+      monthlyCount,
+      total,
+      dailyTotal: daily.length,
+      latestDaily: daily[0],
+      latestWeekly: weekly[0],
+      latestMonthly: monthly[0],
+      latestQuarterly: quarterly[0],
+      latestAnnual: annual[0],
+    }
   }, [ym, weekKey])
 
   // Recent dailies (last 5)
@@ -291,55 +342,17 @@ export function Home() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard
           label={`本月日报（${ym}）`}
           value={stats.monthlyCount}
           hint={`累计 ${stats.dailyTotal} 篇`}
         />
-        {stats.latestWeekly ? (
-          <Link
-            to={`/weekly/${stats.latestWeekly.slug}`}
-            className="lo-card lo-card-hover group block p-4 transition-colors hover:border-primary/50"
-          >
-            <div className="text-[11px] uppercase tracking-wider text-dim">最新周报</div>
-            <div className="mt-1.5 flex items-start justify-between gap-2">
-              <span className="lo-clamp-2 text-sm font-semibold text-heading group-hover:text-primary-hover">
-                {stats.latestWeekly.title}
-              </span>
-              <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-dim group-hover:text-primary" />
-            </div>
-            <div className="mt-1 font-mono text-[11px] text-dim">
-              {stats.latestWeekly.date?.slice(0, 10)}
-            </div>
-          </Link>
-        ) : (
-          <StatCard label="最新周报" value="—" hint={weekKey} />
-        )}
-        {stats.latest ? (
-          <Link
-            to={`/daily/${stats.latest.slug}`}
-            className="lo-card lo-card-hover group block p-4 transition-colors hover:border-primary/50"
-          >
-            <div className="text-[11px] uppercase tracking-wider text-dim">最新日报</div>
-            <div className="mt-1.5 flex items-start justify-between gap-2">
-              <span className="lo-clamp-2 text-sm font-semibold text-heading group-hover:text-primary-hover">
-                {stats.latest.title}
-              </span>
-              <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-dim group-hover:text-primary" />
-            </div>
-            <div className="mt-1 font-mono text-[11px] text-dim">
-              {stats.latest.date?.slice(0, 10)}
-            </div>
-          </Link>
-        ) : (
-          <StatCard label="最新日报" value="—" />
-        )}
-        <StatCard
-          label="累计报告"
-          value={stats.total}
-          hint="日/周/月/季/年/愿景/附录"
-        />
+        <ReportCard label="最新日报" report={stats.latestDaily} to={(slug) => `/daily/${slug}`} />
+        <ReportCard label="最新周报" report={stats.latestWeekly} to={(slug) => `/weekly/${slug}`} />
+        <ReportCard label="最新月报" report={stats.latestMonthly} to={(slug) => `/monthly/${slug}`} />
+        <ReportCard label="最新季报" report={stats.latestQuarterly} to={(slug) => `/quarterly/${slug}`} />
+        <ReportCard label="最新年报" report={stats.latestAnnual} to={(slug) => `/annual/${slug}`} />
       </div>
 
       {/* Two-column layout: recent reports + quick nav */}
