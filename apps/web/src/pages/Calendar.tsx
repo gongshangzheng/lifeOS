@@ -433,7 +433,10 @@ export function CalendarPage() {
                   {/* Today section */}
                   {(todayEvents.length > 0 || pendingTodayTasks.length > 0) && (
                     <div className="space-y-2">
-                      <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">今日</h2>
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">
+                        今日
+                        <span className="ml-1.5 text-placeholder">{todayEvents.length + pendingTodayTasks.length}</span>
+                      </h2>
                       {todayEvents.map((e) => {
                         const colors = getEventColors(e)
                         return (

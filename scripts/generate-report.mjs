@@ -153,9 +153,14 @@ function findUndatedTasks() {
 function formatProjectRecurring(reportLevel) {
   const tasks = findProjectRecurring(reportLevel)
   if (tasks.length === 0) return ''
+  const weekdayNames = ['日','一','二','三','四','五','六']
   const lines = tasks.map((t) => {
     const r = t.recurring
-    const freq = r.pattern === 'daily' ? '每日' : r.pattern === 'weekly' ? '每周' : '每' + (r.every || 3) + '天'
+    const freq = r.pattern === 'daily'
+      ? '每日'
+      : r.pattern === 'weekly'
+        ? '每周' + weekdayNames[new Date(r.activeFrom + 'T00:00:00').getDay()]
+        : '每' + (r.every || 3) + '天'
     const time = r.startTime ? r.startTime + (r.endTime ? '-' + r.endTime : '') + ' ' : ''
     const desc = t.description ? ' — ' + t.description : ''
     return '- [ ] ' + time + t.title + ' (' + freq + ', ' + t.projectSlug + ')' + desc

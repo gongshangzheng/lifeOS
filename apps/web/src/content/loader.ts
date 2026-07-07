@@ -151,14 +151,14 @@ export function countTasks(tasks: TaskNode[]): { total: number; completed: numbe
   return { total, completed }
 }
 
-/** Flatten all tasks with date ranges for calendar display */
+/** Flatten leaf tasks with date ranges for calendar display (excludes parent/container tasks) */
 export function flattenDatedTasks(
   tasks: TaskNode[],
   projectSlug: string,
 ): Array<TaskNode & { projectSlug: string }> {
   const result: Array<TaskNode & { projectSlug: string }> = []
   for (const t of tasks) {
-    if (t.startDate) result.push({ ...t, projectSlug })
+    if (t.startDate && t.children.length === 0) result.push({ ...t, projectSlug })
     if (t.children.length > 0) {
       result.push(...flattenDatedTasks(t.children, projectSlug))
     }
