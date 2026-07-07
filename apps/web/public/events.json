@@ -54,6 +54,36 @@
       "endTime": "17:00",
       "location": "工位",
       "category": "study"
+    },
+    {
+      "id": "evt-20260706-2030-ir-goal",
+      "title": "红外压缩：明确实现目标",
+      "date": "2026-07-06",
+      "startTime": "20:30",
+      "endTime": "22:00",
+      "location": "工位",
+      "category": "work",
+      "description": "确认压缩目标 CIF 352×288 → 0.01bpp，明确输入格式与评测指标"
+    },
+    {
+      "id": "evt-20260707-2030-ir-path",
+      "title": "红外压缩：确定可行路径",
+      "date": "2026-07-07",
+      "startTime": "20:30",
+      "endTime": "22:00",
+      "location": "工位",
+      "category": "work",
+      "description": "选定压缩方案（链码/JBIG2/游程编码），明确编码框架与模块划分"
+    },
+    {
+      "id": "evt-20260708-2030-ir-code",
+      "title": "红外压缩：开始测试代码实现",
+      "date": "2026-07-08",
+      "startTime": "20:30",
+      "endTime": "22:30",
+      "location": "工位",
+      "category": "work",
+      "description": "搭建编码管线雏形，在标准测试集上验证 bpp 和重建质量"
     }
   ],
   "recurring": [
