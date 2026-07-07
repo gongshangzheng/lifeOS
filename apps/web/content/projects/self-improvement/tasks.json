@@ -42,7 +42,8 @@
           { "id": "t3-2-1", "title": "红楼梦", "status": "active", "startDate": null, "endDate": null, "description": "目前看到第45章", "tags": ["阅读"], "children": [] }
         ] },
         { "id": "t3-3", "title": "学吉他", "status": "planned", "startDate": null, "endDate": null, "description": "入门和弦与基本指法", "children": [] },
-        { "id": "t3-4", "title": "学画画", "status": "planned", "startDate": null, "endDate": null, "description": "基础素描与色彩练习", "children": [] }
+        { "id": "t3-4", "title": "学画画", "status": "planned", "startDate": null, "endDate": null, "description": "基础素描与色彩练习", "tags": ["爱好"], "children": [] },
+        { "id": "t3-5", "title": "学摄影", "status": "planned", "startDate": null, "endDate": null, "description": "学习构图、光影与后期处理", "tags": ["爱好"], "children": [] }
       ]
     },
     {
