@@ -130,12 +130,88 @@ tags: [annual, report, 2026]
 | `tasks` | 列出任务树 | `node scripts/plans.mjs tasks --project slug` |
 | `task-update` | 更新任务状态 | `node scripts/plans.mjs task-update --project slug --task-id id --status completed` |
 | `task-add` | 添加子任务 | `node scripts/plans.mjs task-add --project slug --parent id --title "..."` |
+| `recurring-add` | 添加周期任务 | `node scripts/plans.mjs recurring-add --project slug --title "..." --pattern daily --report-levels daily,weekly` |
+| `recurring-list` | 列出周期任务 | `node scripts/plans.mjs recurring-list [--project slug]` |
+
+### 周期任务命令详情
+
+#### `recurring-add` — 添加项目级周期任务
+
+```bash
+node scripts/plans.mjs recurring-add \
+  --project lifeos \
+  --title "每日代码提交" \
+  --pattern daily \
+  --report-levels daily,weekly \
+  [--every N]           # every-N-days 时必填 \
+  [--start HH:MM]       # 开始时间 \
+  [--end HH:MM]         # 结束时间 \
+  [--from YYYY-MM-DD]   # 生效日期（默认今天） \
+  [--until YYYY-MM-DD]  # 结束日期 \
+  [--parent id]         # 挂到某个父任务下 \
+  [--description "..."] # 描述
+```
+
+**必填参数**: `--project`, `--title`, `--pattern`, `--report-levels`
+
+**pattern 类型**: `daily` / `weekly` / `every-N-days`
+
+**report-levels**: 控制周期任务在哪些报告层级显示，逗号分隔
+- `daily` — 日报
+- `weekly` — 周报
+- `monthly` — 月报
+- `quarterly` — 季报
+
+任务 ID 格式为 `r-N`（recurring 缩写），不会与普通任务 `t-N` 冲突。
+
+#### `recurring-list` — 列出所有周期任务
+
+```bash
+# 列出所有项目的周期任务
+node scripts/plans.mjs recurring-list
+
+# 只列出某个项目的
+node scripts/plans.mjs recurring-list --project lifeos
+```
 
 ### 输出内容
 
 - **projects**: 项目名、状态、类别、时间范围、标签、最新进展
 - **daily/weekly/monthly/quarterly/annual**: 标题、导航、待办事项（`- [ ]`）、已完成（`- [x]`）
 - **overview**: 活跃项目 + 今日待办 + 本周待办 + 本月待办
+- **recurring-list**: 任务 ID、标题、频率、时间、报告层级、项目 slug
+
+### 任务数据模型 (TaskNode)
+
+```typescript
+interface TaskNode {
+  id: string                  // t-N (普通) 或 r-N (周期)
+  title: string
+  status: 'planned' | 'active' | 'paused' | 'completed'
+  startDate: string | null
+  endDate: string | null
+  description?: string
+  notePath?: string
+  tags?: string[]             // 习惯标签，如 ["健身", "阅读"]，日报自动生成「习惯打卡」区域
+  recurring?: RecurringConfig // 周期任务配置
+  children: TaskNode[]
+}
+```
+
+### 自动级联完成
+
+`tasks` 和 `overview` 命令在输出时会自动运行 `cascadeStatus()`：
+- 从叶子节点向上递归
+- 如果所有子任务都是 `completed`，父任务自动标记为 `completed`
+- **仅运行时计算**，不修改原始 JSON 数据
+- CLI (`plans.mjs`) 和前端 (`loader.ts`) 双端同步
+
+### tags 字段与 Habits 追踪
+
+在 tasks.json 中给任务添加 `tags` 字段后，日报生成脚本 (`generate-report.mjs`) 会自动：
+1. 扫描所有项目带 `tags` 的未完成任务
+2. 在日报模板中生成「习惯打卡」区域：`- [ ] 任务名 #标签`
+3. Habits 页面解析 `- [x] 描述 #标签` 格式来追踪每日习惯打卡
 
 ## Agent 操作指南
 
@@ -190,13 +266,13 @@ node scripts/generate-report.mjs quarterly [--date YYYY-QN]
 ## 已有文件索引
 
 ### 日报（6-daily）
-2026-05-29, 2026-05-30, 2026-05-31, 2026-06-02, 2026-06-08~2026-06-14, 2026-06-30, 2026-07-06
+2026-05-29 ~ 2026-05-31, 2026-06-02, 2026-06-08 ~ 2026-06-14, 2026-06-30, 2026-07-06
 
 ### 周报（5-weekly）
-2026-05-W22, 2026-06-W23, 2026-06-W24, 2026-06-W25, 2026-06-W26
+2026-05-W22, 2026-06-W23 ~ 2026-06-W26, 2026-07-W28
 
 ### 月报（4-monthly）
-2026-05, 2026-06
+2026-05, 2026-06, 2026-07
 
 ### 季报（3-quarterly）
 2026-Q2
@@ -205,7 +281,13 @@ node scripts/generate-report.mjs quarterly [--date YYYY-QN]
 2026, annual-2026-2027
 
 ### 项目（projects）
-dingtalk-digital-human（钉钉数字人，active）
+- dingtalk-digital-human（钉钉数字人，active）
+- infrared-contour-compression（红外轮廓压缩，active）
+- pet-action-recognition（宠物动作识别，planned）
+- self-improvement（自我提升，active）
+- interpersonal-relationships（人际关系，active）
+- internship-projects（实习与项目，active）
+- lifeos（lifeOS 本体，active）
 
 ## 注意事项
 
