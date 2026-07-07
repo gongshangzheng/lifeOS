@@ -32,13 +32,24 @@ function expandRecurringForDate(dateStr) {
   const data = loadEventsData()
   if (!data.recurring || data.recurring.length === 0) return []
   const result = []
+  const weekdayNames = ['日','一','二','三','四','五','六']
   for (const r of data.recurring) {
     if (r.activeFrom && r.activeFrom > dateStr) continue
     if (r.activeUntil && r.activeUntil < dateStr) continue
     if ((r.excludeDates || []).includes(dateStr)) continue
+    // Check pattern match for non-daily patterns
+    if (r.pattern !== 'daily' && r.activeFrom) {
+      const from = new Date(r.activeFrom + 'T00:00:00')
+      const target = new Date(dateStr + 'T00:00:00')
+      const diffDays = Math.round((target - from) / 86400000)
+      if (r.pattern === 'weekly' && diffDays % 7 !== 0) continue
+      if (r.pattern === 'every-N-days' && diffDays % (r.every || 3) !== 0) continue
+    }
+    const weekday = weekdayNames[new Date(dateStr + 'T00:00:00').getDay()]
     result.push({
       ...r,
       date: dateStr,
+      weekday,
       eventId: `evt-${dateStr.replace(/-/g, '')}-${r.id}`,
     })
   }
@@ -74,7 +85,7 @@ function formatRecurringDaily(dateStr) {
   const tasks = expandRecurringForDate(dateStr)
   if (tasks.length === 0) return ''
   const lines = tasks.map((t) => {
-    const time = t.startTime ? t.startTime : '全天'
+    const time = t.startTime && t.endTime ? t.startTime + '-' + t.endTime : t.startTime ? t.startTime : '全天'
     const desc = t.description ? ' — ' + t.description : ''
     return '- [ ] ' + time + ' ' + t.title + desc
   })
@@ -171,8 +182,13 @@ function formatRecurringWeekly(fromDate, toDate) {
     if (!byId.has(t.id)) byId.set(t.id, { ...t, dates: [] })
     byId.get(t.id).dates.push(t.date)
   }
+  const weekdayNames = ['日','一','二','三','四','五','六']
   const lines = [...byId.values()].map((t) => {
-    const freq = t.pattern === 'daily' ? '每日' : t.pattern === 'weekly' ? '每周' : '每' + (t.every || 3) + '天'
+    const freq = t.pattern === 'daily'
+      ? '每日'
+      : t.pattern === 'weekly'
+        ? '每周' + weekdayNames[new Date(t.activeFrom + 'T00:00:00').getDay()]
+        : '每' + (t.every || 3) + '天'
     const count = t.dates.length
     const desc = t.description ? ' — ' + t.description : ''
     return '- [ ] ' + t.title + ' (' + freq + ', 本周' + count + '次)' + desc
@@ -192,8 +208,13 @@ function formatRecurringMonthly(monthStr) {
     if (!byId.has(t.id)) byId.set(t.id, { ...t, count: 0 })
     byId.get(t.id).count++
   }
+  const weekdayNames = ['日','一','二','三','四','五','六']
   const lines = [...byId.values()].map((t) => {
-    const freq = t.pattern === 'daily' ? '每日' : t.pattern === 'weekly' ? '每周' : '每' + (t.every || 3) + '天'
+    const freq = t.pattern === 'daily'
+      ? '每日'
+      : t.pattern === 'weekly'
+        ? '每周' + weekdayNames[new Date(t.activeFrom + 'T00:00:00').getDay()]
+        : '每' + (t.every || 3) + '天'
     const desc = t.description ? ' — ' + t.description : ''
     return '- [ ] ' + t.title + ' (' + freq + ', 本月' + t.count + '次)' + desc
   })
