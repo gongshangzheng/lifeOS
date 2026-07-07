@@ -1,162 +1,291 @@
 import { useMemo, useState } from 'react'
-import { Activity } from 'lucide-react'
+import { Flame, Activity, Check, X } from 'lucide-react'
 import { getAllDaily } from '@/content/loader'
 
 // ── Types ────────────────────────────────────────────────────
 
-type HabitRecord = {
-  date: string // YYYY-MM-DD
+interface HabitRecord {
+  date: string
+  checked: boolean
+  label: string
   tag: string
-  description: string
-  done: boolean
 }
 
-// ── Parse tagged habits from daily reports ───────────────────
-
-/**
- * Matches GFM task list items with a trailing `#tag`:
- *   - [x] 跑步 30min #健身
- *   - [ ] 阅读 #学习
- * Items without a `#tag` suffix are ignored.
- */
-function parseTaggedHabits(): {
+interface Habit {
+  label: string
+  tag: string
   records: HabitRecord[]
-  tags: string[]
-  dates: string[]
-} {
-  const dailies = getAllDaily()
-  const records: HabitRecord[] = []
-  const tagSet = new Set<string>()
-  const dateSet = new Set<string>()
+  streak: number
+  bestStreak: number
+  rate: number
+}
 
-  // Match: "- [x] some text #tag" or "- [ ] some text #tag"
-  // The #tag must be at the end (after optional whitespace)
-  const lineRegex = /^[-*]\s+\[(x| )\]\s+(.+?)\s+#(\S+)\s*$/gim
+// ── Parse & calculate ────────────────────────────────────────
+
+const HABIT_PATTERN = /^[-*]\s+\[([x ])\]\s+(.+?)\s+#(\S+)\s*$/i
+
+function parseHabits(): { habits: Habit[]; tags: string[] } {
+  const dailies = getAllDaily()
+  const labelMap = new Map<string, HabitRecord[]>()
+  const tagSet = new Set<string>()
 
   for (const d of dailies) {
     if (!d.date || !d.body) continue
     const dateStr = d.date.slice(0, 10)
-
-    let match: RegExpExecArray | null
-    while ((match = lineRegex.exec(d.body)) !== null) {
-      const done = match[1].toLowerCase() === 'x'
-      const description = match[2].trim()
+    for (const line of d.body.split('\n')) {
+      const match = line.match(HABIT_PATTERN)
+      if (!match) continue
+      const checked = match[1].toLowerCase() === 'x'
+      const label = match[2].trim()
       const tag = match[3]
-
-      records.push({ date: dateStr, tag, description, done })
       tagSet.add(tag)
-      dateSet.add(dateStr)
+      const key = label.toLowerCase()
+      if (!labelMap.has(key)) labelMap.set(key, [])
+      labelMap.get(key)!.push({ date: dateStr, checked, label, tag })
     }
   }
 
-  return {
-    records,
-    tags: [...tagSet].sort(),
-    dates: [...dateSet].sort(),
+  const habits: Habit[] = []
+  for (const [, records] of labelMap) {
+    const sorted = records.sort((a, b) => a.date.localeCompare(b.date))
+    const { streak, bestStreak } = calcStreak(sorted)
+    const checkedCount = sorted.filter((r) => r.checked).length
+    const rate = sorted.length > 0 ? Math.round((checkedCount / sorted.length) * 100) : 0
+    habits.push({
+      label: sorted[0].label,
+      tag: sorted[0].tag,
+      records: sorted,
+      streak,
+      bestStreak,
+      rate,
+    })
   }
+
+  habits.sort(
+    (a, b) => b.streak - a.streak || b.bestStreak - a.bestStreak || a.label.localeCompare(b.label),
+  )
+  return { habits, tags: [...tagSet].sort() }
 }
 
-// ── Heatmap Cell ─────────────────────────────────────────────
+function calcStreak(records: HabitRecord[]): { streak: number; bestStreak: number } {
+  const checkedDates = records.filter((r) => r.checked).map((r) => r.date).sort()
+  if (checkedDates.length === 0) return { streak: 0, bestStreak: 0 }
 
-function HeatmapCell({
-  value,
-  title,
-}: {
-  value: 'empty' | 'done' | 'pending'
-  title: string
-}) {
-  const colors = {
-    empty: 'bg-muted',
-    done: 'bg-green-500',
-    pending: 'bg-amber-500/40',
+  let best = 1
+  let current = 1
+  for (let i = 1; i < checkedDates.length; i++) {
+    const prev = new Date(checkedDates[i - 1])
+    const curr = new Date(checkedDates[i])
+    const diff = Math.round((curr.getTime() - prev.getTime()) / 86400000)
+    if (diff === 1) {
+      current++
+      best = Math.max(best, current)
+    } else {
+      current = 1
+    }
   }
+
+  const sortedDesc = [...checkedDates].reverse()
+  const today = new Date().toISOString().slice(0, 10)
+  const lastChecked = sortedDesc[0]
+  const daysSinceLast = Math.round(
+    (new Date(today).getTime() - new Date(lastChecked).getTime()) / 86400000,
+  )
+  if (daysSinceLast > 1) return { streak: 0, bestStreak: best }
+
+  let streak = 1
+  for (let i = 1; i < sortedDesc.length; i++) {
+    const prev = new Date(sortedDesc[i - 1])
+    const curr = new Date(sortedDesc[i])
+    const diff = Math.round((prev.getTime() - curr.getTime()) / 86400000)
+    if (diff === 1) streak++
+    else break
+  }
+
+  return { streak, bestStreak: best }
+}
+
+// ── 30-Day Mini Heatmap ──────────────────────────────────────
+
+function HabitHeatmap({ habit }: { habit: Habit }) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const days: Array<{ date: string; record?: HabitRecord }> = []
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const ds = d.toISOString().slice(0, 10)
+    const rec = habit.records.find((r) => r.date === ds)
+    days.push({ date: ds, record: rec })
+  }
+
   return (
-    <div
-      className={`h-3 w-3 rounded-sm ${colors[value]} transition-colors hover:ring-1 hover:ring-primary`}
-      title={title}
-    />
+    <div className="flex flex-wrap gap-1">
+      {days.map((day) => {
+        const hasRecord = !!day.record
+        const isChecked = day.record?.checked
+        return (
+          <div
+            key={day.date}
+            className={`h-4 w-4 rounded-sm transition-colors ${
+              isChecked ? 'bg-green-500' : hasRecord ? 'bg-red-400/40' : 'bg-muted'
+            }`}
+            title={`${day.date}: ${isChecked ? '✓' : hasRecord ? '✗' : '—'}`}
+          />
+        )
+      })}
+    </div>
   )
 }
 
-// ── Main Component ───────────────────────────────────────────
+// ── Habit Card ───────────────────────────────────────────────
+
+function HabitCard({ habit }: { habit: Habit }) {
+  const total = habit.records.length
+  const checked = habit.records.filter((r) => r.checked).length
+
+  return (
+    <div className="lo-card p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Flame
+            className={`h-4 w-4 ${habit.streak > 0 ? 'text-orange-500' : 'text-dim'}`}
+          />
+          <span className="text-sm font-semibold text-heading">{habit.label}</span>
+        </div>
+        <span className="rounded bg-muted px-2 py-0.5 text-[10px] text-dim">
+          #{habit.tag}
+        </span>
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-3 text-center">
+        <div>
+          <div className="flex items-center justify-center gap-1 text-lg font-bold text-orange-500">
+            <Flame className="h-3.5 w-3.5" />
+            {habit.streak}
+          </div>
+          <div className="text-[10px] text-dim">连续</div>
+        </div>
+        <div>
+          <div className="text-lg font-bold text-heading">{habit.bestStreak}</div>
+          <div className="text-[10px] text-dim">最长</div>
+        </div>
+        <div>
+          <div className="text-lg font-bold text-heading">{habit.rate}%</div>
+          <div className="text-[10px] text-dim">{checked}/{total}</div>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <HabitHeatmap habit={habit} />
+        <div className="mt-1 flex items-center justify-between text-[9px] text-placeholder">
+          <span>30 天前</span>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-sm bg-green-500" /> 完成
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-sm bg-red-400/40" /> 未完成
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-sm bg-muted" /> 无记录
+            </span>
+          </div>
+          <span>今天</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Main Page ───────────────────────────────────────────────
 
 export function HabitsPage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
+  const { habits, tags } = useMemo(() => parseHabits(), [])
 
-  const { records, tags, dates } = useMemo(() => parseTaggedHabits(), [])
+  const filteredHabits = useMemo(() => {
+    if (!selectedTag) return habits
+    return habits.filter((h) => h.tag === selectedTag)
+  }, [habits, selectedTag])
 
-  const filteredRecords = useMemo(() => {
-    if (!selectedTag) return records
-    return records.filter((r) => r.tag === selectedTag)
-  }, [records, selectedTag])
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const checkedToday = habits.filter((h) => {
+    const rec = h.records.find((r) => r.date === todayStr)
+    return rec?.checked
+  }).length
+  const totalToday = habits.length
+  const rateToday = totalToday > 0 ? Math.round((checkedToday / totalToday) * 100) : 0
 
-  // Build matrix: tag -> date -> { done: boolean, desc: string }
-  const matrix = useMemo(() => {
-    const m = new Map<string, Map<string, { done: boolean; desc: string }>>()
-    for (const r of filteredRecords) {
-      if (!m.has(r.tag)) m.set(r.tag, new Map())
-      // If multiple entries for same tag+date, prefer done
-      const existing = m.get(r.tag)!.get(r.date)
-      if (!existing || (!existing.done && r.done)) {
-        m.get(r.tag)!.set(r.date, { done: r.done, desc: r.description })
-      }
-    }
-    return m
-  }, [filteredRecords])
+  const totalRecords = habits.reduce((sum, h) => sum + h.records.length, 0)
+  const totalChecked = habits.reduce((sum, h) => sum + h.records.filter((r) => r.checked).length, 0)
+  const bestStreak = habits.reduce((max, h) => Math.max(max, h.bestStreak), 0)
 
-  // Stats
-  const stats = useMemo(() => {
-    const doneCount = records.filter((r) => r.done).length
-    const total = records.length
-    return {
-      doneCount,
-      total,
-      rate: total > 0 ? Math.round((doneCount / total) * 100) : 0,
-      tagCount: tags.length,
-      dayCount: dates.length,
-    }
-  }, [records, tags, dates])
-
-  // Filtered dates (only dates that have records for selected tag)
-  const filteredDates = useMemo(() => {
-    if (!selectedTag) return dates
-    const dateSet = new Set(filteredRecords.map((r) => r.date))
-    return dates.filter((d) => dateSet.has(d))
-  }, [dates, filteredRecords, selectedTag])
+  const recentRecords = useMemo(() => {
+    return habits
+      .flatMap((h) => h.records.map((r) => ({ ...r, label: h.label })))
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 15)
+  }, [habits])
 
   return (
     <section className="space-y-6">
-      <header className="space-y-1">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Activity className="h-5 w-5 text-primary" />
-          <h1 className="lo-section-title">Habits</h1>
+          <div>
+            <h1 className="lo-section-title">Habits</h1>
+            <p className="text-xs text-dim">从日报打卡记录自动生成</p>
+          </div>
         </div>
-        <p className="lo-section-desc">
-          在日报中使用 <code className="lo-code">- [x] 描述 #标签</code> 格式记录习惯。
-        </p>
-      </header>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className="text-2xl font-bold text-heading">
+              {checkedToday}
+              <span className="text-sm text-dim">/{totalToday}</span>
+            </div>
+            <div className="text-[10px] text-dim">今日打卡</div>
+          </div>
+          <div className="text-right">
+            <div
+              className={`text-2xl font-bold ${
+                rateToday >= 80 ? 'text-green-500' : rateToday >= 50 ? 'text-amber-500' : 'text-red-500'
+              }`}
+            >
+              {rateToday}%
+            </div>
+            <div className="text-[10px] text-dim">完成率</div>
+          </div>
+        </div>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="lo-card p-4">
-          <div className="text-[11px] uppercase tracking-wider text-dim">标签数</div>
-          <div className="mt-1.5 text-xl font-semibold text-heading">{stats.tagCount}</div>
+          <div className="text-[11px] uppercase tracking-wider text-dim">习惯数</div>
+          <div className="mt-1.5 text-xl font-semibold text-heading">{habits.length}</div>
         </div>
         <div className="lo-card p-4">
-          <div className="text-[11px] uppercase tracking-wider text-dim">记录天数</div>
-          <div className="mt-1.5 text-xl font-semibold text-heading">{stats.dayCount}</div>
+          <div className="text-[11px] uppercase tracking-wider text-dim">总记录</div>
+          <div className="mt-1.5 text-xl font-semibold text-heading">{totalRecords}</div>
         </div>
         <div className="lo-card p-4">
-          <div className="text-[11px] uppercase tracking-wider text-dim">完成次数</div>
-          <div className="mt-1.5 text-xl font-semibold text-heading">{stats.doneCount}</div>
+          <div className="text-[11px] uppercase tracking-wider text-dim">总完成率</div>
+          <div className="mt-1.5 text-xl font-semibold text-heading">
+            {totalRecords > 0 ? Math.round((totalChecked / totalRecords) * 100) : 0}%
+          </div>
         </div>
         <div className="lo-card p-4">
-          <div className="text-[11px] uppercase tracking-wider text-dim">完成率</div>
-          <div className="mt-1.5 text-xl font-semibold text-heading">{stats.rate}%</div>
+          <div className="text-[11px] uppercase tracking-wider text-dim">最长连续</div>
+          <div className="mt-1.5 flex items-center gap-1 text-xl font-semibold text-orange-500">
+            <Flame className="h-4 w-4" />
+            {bestStreak}
+          </div>
         </div>
       </div>
 
-      {/* Tag filter chips */}
+      {/* Tag filter */}
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-2">
           <button
@@ -185,82 +314,41 @@ export function HabitsPage() {
         </div>
       )}
 
-      {/* Heatmap */}
-      {filteredDates.length === 0 ? (
+      {/* Habit cards */}
+      {filteredHabits.length === 0 ? (
         <div className="lo-card p-8 text-center">
           <Activity className="mx-auto h-10 w-10 text-placeholder" />
-          <p className="mt-3 text-sm text-dim">
-            日报中还没有带标签的习惯记录。
-          </p>
+          <p className="mt-3 text-sm text-dim">日报中还没有带标签的习惯记录。</p>
           <p className="mt-2 text-xs text-dim">
             使用 <code className="lo-code">- [x] 跑步 #健身</code> 或{' '}
-            <code className="lo-code">- [ ] 阅读 #娱乐</code> 格式。
+            <code className="lo-code">- [ ] 阅读 #学习</code> 格式。
           </p>
         </div>
       ) : (
-        <div className="lo-card overflow-x-auto p-4">
-          <h2 className="mb-4 text-sm font-semibold text-heading">打卡热力图</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredHabits.map((habit) => (
+            <HabitCard key={habit.label} habit={habit} />
+          ))}
+        </div>
+      )}
 
-          {/* Date header */}
-          <div className="flex gap-1 pb-2">
-            <div className="w-24 flex-shrink-0" />
-            {filteredDates.map((d) => (
-              <div key={d} className="w-3 flex-shrink-0">
-                <div className="rotate-90 text-[8px] text-placeholder" title={d}>
-                  {d.slice(5)}
-                </div>
+      {/* Recent activity log */}
+      {recentRecords.length > 0 && (
+        <div className="lo-card p-4">
+          <h2 className="text-sm font-semibold text-heading">最近打卡</h2>
+          <div className="mt-3 space-y-2">
+            {recentRecords.map((r, i) => (
+              <div key={i} className="flex items-center gap-3 text-xs">
+                <span className="font-mono text-dim">{r.date}</span>
+                {r.checked ? (
+                  <Check className="h-3.5 w-3.5 text-green-500" />
+                ) : (
+                  <X className="h-3.5 w-3.5 text-red-400" />
+                )}
+                <span className="text-body">{r.label}</span>
+                <span className="text-placeholder">#{r.tag}</span>
               </div>
             ))}
-          </div>
-
-          {/* Tag rows */}
-          <div className="space-y-1">
-            {[...matrix.keys()].map((tag) => {
-              const rowMap = matrix.get(tag)!
-              return (
-                <div key={tag} className="flex items-center gap-1">
-                  <div
-                    className="w-24 flex-shrink-0 truncate text-xs text-body"
-                    title={tag}
-                  >
-                    #{tag}
-                  </div>
-                  {filteredDates.map((date) => {
-                    const cell = rowMap.get(date)
-                    const value = !cell ? 'empty' : cell.done ? 'done' : 'pending'
-                    return (
-                      <HeatmapCell
-                        key={date}
-                        value={value}
-                        title={`#${tag} · ${date} · ${
-                          cell
-                            ? cell.done
-                              ? `✓ ${cell.desc}`
-                              : `✗ ${cell.desc}`
-                            : '无记录'
-                        }`}
-                      />
-                    )
-                  })}
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Legend */}
-          <div className="mt-4 flex items-center gap-4 text-[10px] text-dim">
-            <span className="flex items-center gap-1">
-              <span className="h-2.5 w-2.5 rounded-sm bg-green-500" />
-              已完成
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="h-2.5 w-2.5 rounded-sm bg-amber-500/40" />
-              未完成
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="h-2.5 w-2.5 rounded-sm bg-muted" />
-              无记录
-            </span>
           </div>
         </div>
       )}

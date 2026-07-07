@@ -1,5 +1,5 @@
 import { Routes, Route, NavLink, Outlet, Navigate, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import {
   CalendarDays,
   NotebookPen,
@@ -15,26 +15,28 @@ import {
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { SearchModal, SearchButton } from '@/components/SearchModal'
-import { Home } from '@/pages/Home'
-import { CalendarPage } from '@/pages/Calendar'
-import {
-  DailyList,
-  DailyDetail,
-  WeeklyList,
-  WeeklyDetail,
-  MonthlyList,
-  MonthlyDetail,
-  QuarterlyList,
-  QuarterlyDetail,
-  AnnualList,
-  AnnualDetail,
-  VisionList,
-  VisionDetail,
-  AppendixList,
-  AppendixDetail,
-} from '@/pages/ReportPages'
-import { ProjectsPage } from '@/pages/Projects'
-import { HabitsPage } from '@/pages/Habits'
+
+// ── Lazy-loaded pages (route-level code splitting) ──────────
+const Home = lazy(() => import('@/pages/Home').then((m) => ({ default: m.Home })))
+const CalendarPage = lazy(() => import('@/pages/Calendar').then((m) => ({ default: m.CalendarPage })))
+const ProjectsPage = lazy(() => import('@/pages/Projects').then((m) => ({ default: m.ProjectsPage })))
+const HabitsPage = lazy(() => import('@/pages/Habits').then((m) => ({ default: m.HabitsPage })))
+
+const rp = () => import('@/pages/ReportPages')
+const DailyList = lazy(() => rp().then((m) => ({ default: m.DailyList })))
+const DailyDetail = lazy(() => rp().then((m) => ({ default: m.DailyDetail })))
+const WeeklyList = lazy(() => rp().then((m) => ({ default: m.WeeklyList })))
+const WeeklyDetail = lazy(() => rp().then((m) => ({ default: m.WeeklyDetail })))
+const MonthlyList = lazy(() => rp().then((m) => ({ default: m.MonthlyList })))
+const MonthlyDetail = lazy(() => rp().then((m) => ({ default: m.MonthlyDetail })))
+const QuarterlyList = lazy(() => rp().then((m) => ({ default: m.QuarterlyList })))
+const QuarterlyDetail = lazy(() => rp().then((m) => ({ default: m.QuarterlyDetail })))
+const AnnualList = lazy(() => rp().then((m) => ({ default: m.AnnualList })))
+const AnnualDetail = lazy(() => rp().then((m) => ({ default: m.AnnualDetail })))
+const VisionList = lazy(() => rp().then((m) => ({ default: m.VisionList })))
+const VisionDetail = lazy(() => rp().then((m) => ({ default: m.VisionDetail })))
+const AppendixList = lazy(() => rp().then((m) => ({ default: m.AppendixList })))
+const AppendixDetail = lazy(() => rp().then((m) => ({ default: m.AppendixDetail })))
 
 const NAV: ReadonlyArray<{ to: string; label: string; icon: typeof CalendarDays }> = [
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
@@ -99,7 +101,9 @@ function Layout() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <NavBar />
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">
-        <Outlet />
+        <Suspense fallback={<div className="flex items-center justify-center py-20 text-sm text-dim">加载中…</div>}>
+          <Outlet />
+        </Suspense>
       </main>
       <footer className="lo-footer">lifeOS — a personal life operating system</footer>
     </div>

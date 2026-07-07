@@ -15,7 +15,7 @@
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "",
+          "description": "Vite 6 + React 19 + TypeScript 5，lazy-loaded 路由级代码分割",
           "children": []
         },
         {
@@ -24,16 +24,16 @@
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "",
+          "description": "Tailwind CSS v4 + Velite 内容构建 + ESLint flat config",
           "children": []
         },
         {
           "id": "t1-3",
-          "title": "路由与 9 个占位页面",
+          "title": "路由与 10 个页面",
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "",
+          "description": "Home / Calendar / Habits / Daily / Weekly / Monthly / Quarterly / Annual / Vision / Projects / Appendix / Resume",
           "children": []
         }
       ]
@@ -48,11 +48,11 @@
       "children": [
         {
           "id": "t2-1",
-          "title": "Velite schema 与 collections 配置",
+          "title": "Velite schema 与 9 个 collection",
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "日/周/月/季/年/愿景/附录/主题/项目 9 个 collection",
+          "description": "日/周/月/季/年/愿景/附录/主题/项目 + resume",
           "children": []
         },
         {
@@ -61,7 +61,7 @@
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "ReportList + ReportDetail 组件，所有报告类型通用",
+          "description": "ReportList + ReportDetail + RelatedReports 组件，所有报告类型通用",
           "children": []
         },
         {
@@ -70,7 +70,7 @@
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "MarkdownView 组件，支持 GFM",
+          "description": "MarkdownView 组件，支持 GFM、代码高亮、stripMarkdown 摘要",
           "children": []
         }
       ]
@@ -78,27 +78,27 @@
     {
       "id": "t3",
       "title": "日历系统",
-      "status": "active",
+      "status": "completed",
       "startDate": "2026-06-30",
-      "endDate": null,
-      "description": "FullCalendar 集成、事件管理",
+      "endDate": "2026-07-06",
+      "description": "FullCalendar 集成、统一数据源、侧边栏、逾期检测",
       "children": [
         {
           "id": "t3-1",
-          "title": "FullCalendar 页面",
+          "title": "FullCalendar 集成",
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "日/周/月/3日/列表视图，事件点击详情",
+          "description": "日/周/月/3日/列表视图，事件点击详情弹窗",
           "children": []
         },
         {
           "id": "t3-2",
-          "title": "events.json 数据管理",
+          "title": "统一数据源架构",
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "events.mjs CLI：增删改查、周期任务展开",
+          "description": "events.json 弃用，tasks.json 成为唯一数据源。TaskNode 扩展 startTime/endTime/location/category 字段",
           "children": []
         },
         {
@@ -107,7 +107,34 @@
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "将任务树的有时间区间的任务显示在日历中",
+          "description": "flattenDatedTasks 提取有日期叶子任务，taskNodesToFCEvents 转换为 FullCalendar 事件，项目着色",
+          "children": []
+        },
+        {
+          "id": "t3-4",
+          "title": "日历侧边栏",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "待办/已完成双标签页，逾期任务置顶（红色 AlertCircle），无日期任务列表，任务详情弹窗",
+          "children": []
+        },
+        {
+          "id": "t3-5",
+          "title": "重复任务支持",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "RecurringConfig（daily/weekly/every-N-days），findRecurringTasks，周期展开到日历",
+          "children": []
+        },
+        {
+          "id": "t3-6",
+          "title": "ICS 导出",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "generate-ics.mjs 脚本，导出 .ics 日历文件",
           "children": []
         }
       ]
@@ -115,10 +142,10 @@
     {
       "id": "t4",
       "title": "项目管理系统",
-      "status": "active",
+      "status": "completed",
       "startDate": "2026-07-06",
-      "endDate": null,
-      "description": "Git 风格任务树、项目管理",
+      "endDate": "2026-07-06",
+      "description": "Git 风格任务树、CLI 管理、任务详情",
       "children": [
         {
           "id": "t4-1",
@@ -126,7 +153,7 @@
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "可展开/折叠的任务树，状态图标，详情面板，notePath 加载，URL hash 持久化",
+          "description": "可展开/折叠的任务树，状态图标，详情面板，URL hash 持久化选中项目",
           "children": []
         },
         {
@@ -135,7 +162,7 @@
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "独立 JSON 文件，plans.mjs CLI 管理（task-update / task-add）",
+          "description": "独立 tasks.json 文件，Vite plugin dev 模式 serve + 生产构建复制",
           "children": []
         },
         {
@@ -144,35 +171,165 @@
           "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "plans.mjs：列出项目、日/周/月/季/年计划",
+          "description": "plans.mjs（888行）：列出项目、日/周/月/季/年计划、task-update/task-add",
+          "children": []
+        },
+        {
+          "id": "t4-4",
+          "title": "任务详情增强",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "时间/地点/执行人行内徽章，notePath 加载 Markdown 笔记，TaskNoteView 组件",
+          "children": []
+        },
+        {
+          "id": "t4-5",
+          "title": "任务状态级联完成",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "cascadeStatus：所有子任务完成时自动标记父任务完成",
           "children": []
         }
       ]
     },
     {
       "id": "t5",
-      "title": "部署与 CI/CD",
-      "status": "planned",
-      "startDate": null,
-      "endDate": null,
-      "description": "GitHub Pages 部署",
+      "title": "习惯追踪",
+      "status": "completed",
+      "startDate": "2026-07-06",
+      "endDate": "2026-07-06",
+      "description": "卡片式习惯页面、连续天数、热力图",
       "children": [
         {
           "id": "t5-1",
-          "title": "gh-pages 部署 workflow",
-          "status": "planned",
+          "title": "卡片式习惯页面",
+          "status": "completed",
           "startDate": null,
           "endDate": null,
-          "description": "",
+          "description": "按描述分组，streak 计算（当前/最长），30天迷你热力图，今日打卡进度头部，统计卡片，标签筛选",
           "children": []
         },
         {
           "id": "t5-2",
+          "title": "日报习惯解析",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "从日报正文提取 `- [x] 描述 #tag` 格式的习惯记录，计算完成率",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "t6",
+      "title": "首页增强",
+      "status": "completed",
+      "startDate": "2026-07-06",
+      "endDate": "2026-07-06",
+      "description": "贡献热力图、快速导航、全局搜索",
+      "children": [
+        {
+          "id": "t6-1",
+          "title": "贡献热力图",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "GitHub 风格日报贡献热力图，日/周/月/季/年统计卡片",
+          "children": []
+        },
+        {
+          "id": "t6-2",
+          "title": "快速导航卡片",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "报告类型卡片网格，最近报告列表",
+          "children": []
+        },
+        {
+          "id": "t6-3",
+          "title": "全局搜索",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "SearchModal 组件，Cmd+K 快捷键，搜索所有报告和项目",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "t7",
+      "title": "主题系统",
+      "status": "completed",
+      "startDate": "2026-07-06",
+      "endDate": "2026-07-06",
+      "description": "暗亮模式切换",
+      "children": [
+        {
+          "id": "t7-1",
+          "title": "暗亮模式切换",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "ThemeToggle 组件 + useTheme hook，localStorage 持久化，system preference 检测",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "t8",
+      "title": "日报生成系统",
+      "status": "completed",
+      "startDate": "2026-07-06",
+      "endDate": "2026-07-06",
+      "description": "报告模板、自动生成、任务注入",
+      "children": [
+        {
+          "id": "t8-1",
+          "title": "报告模板与自动生成",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "generate-report.mjs（779行）：日报/周报/月报/季报/年报模板生成",
+          "children": []
+        },
+        {
+          "id": "t8-2",
+          "title": "今日计划任务注入",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "从 tasks.json 提取当日有日期任务，自动注入日报「今日计划」section",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "t9",
+      "title": "部署与 CI/CD",
+      "status": "planned",
+      "startDate": null,
+      "endDate": null,
+      "description": "GitHub Pages / Vercel 部署",
+      "children": [
+        {
+          "id": "t9-1",
+          "title": "gh-pages 部署 workflow",
+          "status": "planned",
+          "startDate": null,
+          "endDate": null,
+          "description": "GitHub Actions 自动构建 + gh-pages 部署",
+          "children": []
+        },
+        {
+          "id": "t9-2",
           "title": "Vercel 部署备选",
           "status": "planned",
           "startDate": null,
           "endDate": null,
-          "description": "",
+          "description": "Vercel CLI 部署配置",
           "children": []
         }
       ]

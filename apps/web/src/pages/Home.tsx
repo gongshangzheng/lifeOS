@@ -239,16 +239,29 @@ function ContributionHeatmap() {
   )
 }
 
-// ── Main Component ───────────────────────────────────────────
+// ── Live Clock (isolated 1s re-render) ───────────────────────
 
-export function Home() {
+function LiveClock() {
   const [now, setNow] = useState(() => new Date())
-  const [taskTrees, setTaskTrees] = useState<Record<string, TaskTree | null>>({})
-
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(t)
   }, [])
+  return (
+    <div className="lo-card p-4">
+      <p className="text-[11px] uppercase tracking-wider text-dim">当前时间</p>
+      <p className="mt-1 font-mono text-2xl font-semibold text-heading">
+        {now.toLocaleString('zh-CN', { hour12: false })}
+      </p>
+    </div>
+  )
+}
+
+// ── Main Component ───────────────────────────────────────────
+
+export function Home() {
+  const now = useMemo(() => new Date(), [])
+  const [taskTrees, setTaskTrees] = useState<Record<string, TaskTree | null>>({})
 
   // Load task trees for active projects
   useEffect(() => {
@@ -332,12 +345,7 @@ export function Home() {
 
       {/* Time display + Heatmap */}
       <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-        <div className="lo-card p-4">
-          <p className="text-[11px] uppercase tracking-wider text-dim">当前时间</p>
-          <p className="mt-1 font-mono text-2xl font-semibold text-heading">
-            {now.toLocaleString('zh-CN', { hour12: false })}
-          </p>
-        </div>
+        <LiveClock />
         <ContributionHeatmap />
       </div>
 

@@ -3,53 +3,82 @@
   "tasks": [
     {
       "id": "t1",
-      "title": "项目骨架 + 核心 SSG",
-      "status": "active",
-      "startDate": null,
-      "endDate": null,
-      "description": "目录结构、配置系统、Markdown 编译管线、HTML 模板引擎",
+      "title": "Phase 1: 项目骨架 + Velite 内容层 + 路由",
+      "status": "completed",
+      "startDate": "2026-07-07",
+      "endDate": "2026-07-07",
+      "description": "Vite 6 + React 19 + TypeScript + Tailwind v4 + Velite 脚手架，路由系统，Velite collections 定义",
       "children": [
-        { "id": "t1-1", "title": "目录结构与配置系统", "status": "planned", "startDate": null, "endDate": null, "description": "content/ 源文件结构、config.yml 站点配置、路径常量", "children": [] },
-        { "id": "t1-2", "title": "Markdown 编译管线", "status": "planned", "startDate": null, "endDate": null, "description": "Markdown → HTML，支持 Mermaid、数学公式、代码高亮", "children": [] },
-        { "id": "t1-3", "title": "HTML 模板引擎", "status": "planned", "startDate": null, "endDate": null, "description": "基础布局、文章模板、列表页、导航栏、目录侧边栏", "children": [] }
+        { "id": "t1-1", "title": "项目脚手架与配置", "status": "completed", "startDate": null, "endDate": null, "description": "pnpm workspace、Vite 配置（base /InternWiki/）、Tailwind v4 @theme 入口、tsconfig", "children": [] },
+        { "id": "t1-2", "title": "Velite 内容 Schema", "status": "completed", "startDate": null, "endDate": null, "description": "reportSchema（日/周/月/文档共用）、projectSchema、internSchema，从路径自动提取 intern 字段", "children": [] },
+        { "id": "t1-3", "title": "路由与页面布局", "status": "completed", "startDate": null, "endDate": null, "description": "App.tsx 路由表（236行）、NavBar 实习生切换器、SubNav 子导航、ScrollToTop", "children": [] }
       ]
     },
     {
       "id": "t2",
-      "title": "多人空间与权限",
-      "status": "planned",
-      "startDate": null,
-      "endDate": null,
-      "description": "实习生独立空间、个人信息页、内容隔离",
+      "title": "Phase 2: 内容模型与示例数据",
+      "status": "completed",
+      "startDate": "2026-07-07",
+      "endDate": "2026-07-07",
+      "description": "日报/周报/月报/文档/档案完整模板，两个示例实习生（alice + bob）含全部内容类型",
       "children": [
-        { "id": "t2-1", "title": "实习生主页（仪表盘）", "status": "planned", "startDate": null, "endDate": null, "description": "个人统计、最近报告、项目概览", "children": [] },
-        { "id": "t2-2", "title": "内容隔离与路由", "status": "planned", "startDate": null, "endDate": null, "description": "每个实习生的内容独立路由，互不干扰", "children": [] }
+        { "id": "t2-1", "title": "报告模板（日/周/月/文档）", "status": "completed", "startDate": null, "endDate": null, "description": "ReportPages.tsx 通用列表/详情页，frontmatter 模板，列表卡片 + 标签筛选", "children": [] },
+        { "id": "t2-2", "title": "实习生档案与多空间", "status": "completed", "startDate": null, "endDate": null, "description": "profile.md 档案、InternHome 仪表盘（统计卡片 + 最近报告 + 项目概览）、RelatedReports 上下层导航", "children": [] },
+        { "id": "t2-3", "title": "共享文档", "status": "completed", "startDate": null, "endDate": null, "description": "_shared/onboarding/ 入职指南，Shared.tsx 列表/详情页", "children": [] }
       ]
     },
     {
       "id": "t3",
-      "title": "报告与任务管理",
-      "status": "planned",
-      "startDate": null,
-      "endDate": null,
-      "description": "日报/周报模板、项目任务树、习惯追踪",
+      "title": "Phase 3: 任务体系",
+      "status": "completed",
+      "startDate": "2026-07-07",
+      "endDate": "2026-07-07",
+      "description": "tasks.json 加载、Git 风格任务树、级联完成、CLI 管理",
       "children": [
-        { "id": "t3-1", "title": "日报/周报模板与统计", "status": "planned", "startDate": null, "endDate": null, "description": "结构化模板、自动摘要、完成率统计", "children": [] },
-        { "id": "t3-2", "title": "项目任务树", "status": "planned", "startDate": null, "endDate": null, "description": "JSON 任务层级、级联完成、状态追踪", "children": [] },
-        { "id": "t3-3", "title": "习惯追踪", "status": "planned", "startDate": null, "endDate": null, "description": "从日报提取 #标签 打卡记录，生成热力图", "children": [] }
+        { "id": "t3-1", "title": "tasks.json 加载与级联完成", "status": "completed", "startDate": null, "endDate": null, "description": "Vite import.meta.glob 加载、cascadeStatus 级联标记、getProjectTasks/getInternTaskTrees 查询", "children": [] },
+        { "id": "t3-2", "title": "Git 风格任务树组件", "status": "completed", "startDate": null, "endDate": null, "description": "TaskTreeNode.tsx（278行）：递归分支线、状态圆点、展开/折叠、Hover tooltip、assignee/startTime 徽章", "children": [] },
+        { "id": "t3-3", "title": "任务统计与进度条", "status": "completed", "startDate": null, "endDate": null, "description": "countTasks 递归统计、Projects.tsx 项目列表页进度条、ProjectTabs 组件", "children": [] },
+        { "id": "t3-4", "title": "CLI 任务管理", "status": "completed", "startDate": null, "endDate": null, "description": "cli.mjs（764行）：task add/done/remove/move/list/stats", "children": [] },
+        { "id": "t3-5", "title": "任务笔记加载", "status": "completed", "startDate": null, "endDate": null, "description": "TaskNoteView.tsx（121行）：fetch notePath Markdown 渲染，无 notePath 时显示 description", "children": [] }
       ]
     },
     {
       "id": "t4",
-      "title": "搜索与增量构建",
-      "status": "planned",
-      "startDate": null,
-      "endDate": null,
-      "description": "全文搜索、增量构建、开发服务器",
+      "title": "Phase 4: 仪表盘 + 日历 + 习惯追踪",
+      "status": "completed",
+      "startDate": "2026-07-07",
+      "endDate": "2026-07-07",
+      "description": "实习生仪表盘、FullCalendar 日历（含实习生选择器）、习惯追踪",
       "children": [
-        { "id": "t4-1", "title": "全文搜索（拼音支持）", "status": "planned", "startDate": null, "endDate": null, "description": "中文拼音搜索，按实习生/类型/标签过滤", "children": [] },
-        { "id": "t4-2", "title": "增量构建与缓存", "status": "planned", "startDate": null, "endDate": null, "description": "SHA1 缓存，仅重建变更页面", "children": [] },
-        { "id": "t4-3", "title": "开发服务器", "status": "planned", "startDate": null, "endDate": null, "description": "文件监听 + WebSocket LiveReload", "children": [] }
+        { "id": "t4-1", "title": "实习生仪表盘", "status": "completed", "startDate": null, "endDate": null, "description": "InternHome.tsx（363行）：统计卡片、快速链接、最近报告列表、项目概览", "children": [] },
+        { "id": "t4-2", "title": "日历页（含实习生选择器）", "status": "completed", "startDate": null, "endDate": null, "description": "Calendar.tsx（688行）：FullCalendar 6 + 实习生选择器 + 任务事件着色 + 侧边栏（待办/已完成/逾期）+ 重复任务展开 + 详情弹窗", "children": [] },
+        { "id": "t4-3", "title": "习惯追踪", "status": "completed", "startDate": null, "endDate": null, "description": "useHabits.ts（129行）+ Habits.tsx（196行）：从日报提取 #-tag 打卡记录、连续天数、完成率、热力图", "children": [] }
+      ]
+    },
+    {
+      "id": "t5",
+      "title": "Phase 5: 高级功能",
+      "status": "completed",
+      "startDate": "2026-07-07",
+      "endDate": "2026-07-07",
+      "description": "全文搜索、暗/亮模式、CI/CD 部署",
+      "children": [
+        { "id": "t5-1", "title": "全文搜索", "status": "completed", "startDate": null, "endDate": null, "description": "SearchModal.tsx（284行）：搜索日/周/月报+文档+项目+实习生，按类型过滤，Cmd+K 快捷键", "children": [] },
+        { "id": "t5-2", "title": "暗/亮模式", "status": "completed", "startDate": null, "endDate": null, "description": "useTheme.ts（77行）+ ThemeToggle：Tailwind v4 CSS 变量主题 + localStorage 持久化 + 系统偏好检测", "children": [] },
+        { "id": "t5-3", "title": "CI/CD 部署", "status": "completed", "startDate": null, "endDate": null, "description": ".github/workflows/deploy.yml：main 推送 → pnpm install → velite build → vite build → 发布 gh-pages", "children": [] }
+      ]
+    },
+    {
+      "id": "t6",
+      "title": "Phase 6: CLI 工具与文档",
+      "status": "completed",
+      "startDate": "2026-07-07",
+      "endDate": "2026-07-07",
+      "description": "CLI 内容管理、使用指南、SKILL 文档",
+      "children": [
+        { "id": "t6-1", "title": "CLI 内容管理", "status": "completed", "startDate": null, "endDate": null, "description": "cli.mjs：new-intern / new-report / new-doc / new-project 创建带 frontmatter 的 Markdown 模板与目录结构", "children": [] },
+        { "id": "t6-2", "title": "使用指南页面", "status": "completed", "startDate": null, "endDate": null, "description": "Guide.tsx（255行）：框架使用指南、目录结构说明、CLI 命令参考", "children": [] },
+        { "id": "t6-3", "title": "SKILL.md 框架文档", "status": "completed", "startDate": null, "endDate": null, "description": "渐进式披露架构：路由入口 + 4 个 reference 文件（getting-started / content / tasks / deployment）", "children": [] }
       ]
     }
   ]

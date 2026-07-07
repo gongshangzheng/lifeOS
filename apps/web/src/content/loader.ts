@@ -49,7 +49,40 @@ export const getAnnualBySlug = (slug: string): Annual | undefined => findBySlug(
 export const getAllVision = (): Vision[] => [...vision].sort(byDateDesc)
 export const getVisionBySlug = (slug: string): Vision | undefined => findBySlug(vision, slug)
 
-export const getAllAppendix = (): Appendix[] => [...appendix].sort(byDateDesc)
+// ── Appendix (categorized, sorted by category → title) ───────
+
+const APPENDIX_CATEGORY_ORDER: Record<string, number> = {
+  '职业规划': 1,
+  '公司与组织': 2,
+  '生活': 3,
+  '随笔': 4,
+  '收藏': 5,
+  '其他': 99,
+}
+
+export const getAllAppendix = (): Appendix[] =>
+  [...appendix].sort((a, b) => {
+    const catA = APPENDIX_CATEGORY_ORDER[a.category ?? '其他'] ?? 99
+    const catB = APPENDIX_CATEGORY_ORDER[b.category ?? '其他'] ?? 99
+    if (catA !== catB) return catA - catB
+    return (a.title ?? '').localeCompare(b.title ?? '')
+  })
+
+export function getAppendixGrouped(): Array<{ category: string; items: Appendix[] }> {
+  const items = getAllAppendix()
+  const groups: Array<{ category: string; items: Appendix[] }> = []
+  for (const item of items) {
+    const cat = item.category ?? '其他'
+    let group = groups.find((g) => g.category === cat)
+    if (!group) {
+      group = { category: cat, items: [] }
+      groups.push(group)
+    }
+    group.items.push(item)
+  }
+  return groups
+}
+
 export const getAppendixBySlug = (slug: string): Appendix | undefined =>
   findBySlug(appendix, slug)
 

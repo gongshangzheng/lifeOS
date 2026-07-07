@@ -24,7 +24,8 @@ type CollectionConfig<Slug extends string = string> = {
   description: string
   basePath: string
   empty: string
-  listLoader: () => ReadonlyArray<{ slug: Slug; title: string; date?: string; summary?: string }>
+  groupByCategory?: boolean
+  listLoader: () => ReadonlyArray<{ slug: Slug; title: string; date?: string; summary?: string; category?: string }>
   detailLoader: (slug: string) =>
     | { title: string; slug: Slug; date?: string; summary?: string; body: string }
     | undefined
@@ -81,9 +82,10 @@ const COLLECTIONS = {
   },
   appendix: {
     label: 'Appendix',
-    description: '随笔、长文、专题与背景资料。',
+    description: '职业规划、公司调研、生活随笔与收藏清单。',
     basePath: '/appendix',
     empty: '还没有文章。',
+    groupByCategory: true,
     listLoader: getAllAppendix,
     detailLoader: getAppendixBySlug,
   },
@@ -92,11 +94,11 @@ const COLLECTIONS = {
 type CollectionKey = keyof typeof COLLECTIONS
 
 function makeListPage(key: CollectionKey) {
-  const cfg = COLLECTIONS[key]
+  const cfg: CollectionConfig = COLLECTIONS[key]
   return function ListPage() {
     const items: ReportListItem[] = cfg
       .listLoader()
-      .map((it) => ({ slug: it.slug, title: it.title, date: it.date, summary: it.summary }))
+      .map((it) => ({ slug: it.slug, title: it.title, date: it.date, summary: it.summary, category: it.category }))
     return (
       <ReportList
         title={`${cfg.label} Reports`}
@@ -104,6 +106,7 @@ function makeListPage(key: CollectionKey) {
         items={items}
         basePath={cfg.basePath}
         emptyText={cfg.empty}
+        groupByCategory={cfg.groupByCategory}
       />
     )
   }

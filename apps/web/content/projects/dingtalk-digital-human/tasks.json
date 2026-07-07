@@ -69,7 +69,7 @@
         { "id": "t3-2", "title": "Wave2Lip 唇同步异常排查", "status": "active", "startDate": null, "endDate": null, "description": "之前测试 Wave2Lip 唇同步分数最高，结果可疑，需复验", "children": [] },
         { "id": "t3-3", "title": "无参视频质量评测模型调研", "status": "active", "startDate": null, "endDate": null, "description": "除 TOPIQ 外调研更多 no-reference 视频质量评测模型，补充有参方案对照", "children": [] },
         { "id": "t3-4", "title": "输出一版完整评测结果", "status": "planned", "startDate": null, "endDate": null, "description": "优化完成后对所有模型进行一次完整评测", "children": [] },
-        { "id": "t3-5", "title": "合并代码", "status": "active", "startDate": "2026-07-07", "endDate": null, "startTime": "09:00", "endTime": "10:30", "location": "工位", "category": "work", "description": "合并各分支代码到主分支", "children": [] },
+        { "id": "t3-5", "title": "合并代码", "status": "completed", "startDate": "2026-07-07", "endDate": null, "startTime": "09:00", "endTime": "10:30", "location": "工位", "category": "work", "description": "合并各分支代码到主分支", "children": [] },
         { "id": "t3-6", "title": "跑通评测代码全流程", "status": "active", "startDate": "2026-07-07", "endDate": null, "startTime": "14:00", "endTime": "17:30", "location": "工位", "category": "work", "description": "端到端跑通评测代码的完整流程，验证各环节可用", "children": [] }
       ]
     },
@@ -84,7 +84,7 @@
         { "id": "t4-1", "title": "近实时模型部署", "status": "planned", "startDate": null, "endDate": null, "description": "近实时数字人模型部署与效果测试", "children": [] },
         { "id": "t4-2", "title": "非实时模型部署", "status": "planned", "startDate": null, "endDate": null, "description": "非实时数字人模型部署与效果测试", "children": [] },
         { "id": "t4-3", "title": "搜集近实时数字人项目（调研）", "status": "active", "startDate": "2026-07-07", "endDate": null, "startTime": "10:30", "endTime": "12:00", "location": "工位", "category": "work", "description": "调研近实时数字人开源项目，整理候选列表", "children": [] },
-        { "id": "t4-4", "title": "封装到评测框架", "status": "planned", "startDate": "2026-07-07", "endDate": null, "startTime": "20:30", "endTime": "22:00", "location": "工位", "category": "work", "description": "对候选项目进行适配封装，补充到现有评测框架中", "children": [] }
+        { "id": "t4-4", "title": "封装到评测框架", "status": "planned", "startDate": "2026-07-08", "endDate": null, "startTime": "14:00", "endTime": "17:00", "location": "工位", "category": "work", "description": "对候选项目进行适配封装，补充到现有评测框架中", "children": [] }
       ]
     },
     {

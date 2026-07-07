@@ -6,7 +6,7 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import type { EventInput } from '@fullcalendar/core'
 import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { FolderKanban, FileText, Download, Check, Circle } from 'lucide-react'
+import { FolderKanban, FileText, Download, Check, Circle, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getAllProjects, getProjectTasks, flattenDatedTasks, flattenUndatedTasks, findRecurringTasks, getAllDaily, type TaskNode, type RecurringConfig } from '@/content/loader'
 
@@ -22,60 +22,6 @@ interface CalendarEvent {
   category?: string
   description?: string
   project?: string
-}
-
-interface RecurringEvent {
-  id: string
-  title: string
-  pattern: 'daily' | 'weekly' | 'every-N-days'
-  every?: number
-  startTime?: string
-  endTime?: string
-  location?: string
-  category?: string
-  description?: string
-  activeFrom: string
-  activeUntil?: string | null
-  excludeDates: string[]
-  project?: string
-}
-
-/** Expand recurring events into individual instances for a date range */
-function expandRecurring(
-  recurring: RecurringEvent[],
-  fromDate: string,
-  toDate: string,
-): CalendarEvent[] {
-  const result: CalendarEvent[] = []
-  for (const r of recurring) {
-    const start = new Date(Math.max(new Date(fromDate).getTime(), new Date(r.activeFrom).getTime()))
-    const end = r.activeUntil
-      ? new Date(Math.min(new Date(toDate).getTime(), new Date(r.activeUntil).getTime()))
-      : new Date(toDate)
-    const excludeSet = new Set(r.excludeDates || [])
-    let current = new Date(start)
-    while (current <= end) {
-      const dateStr = current.toISOString().slice(0, 10)
-      if (!excludeSet.has(dateStr)) {
-        result.push({
-          id: `evt-${dateStr.replace(/-/g, '')}-${r.id}`,
-          title: r.title,
-          date: dateStr,
-          startTime: r.startTime,
-          endTime: r.endTime,
-          location: r.location,
-          category: r.category,
-          description: r.description,
-          project: r.project,
-        })
-      }
-      if (r.pattern === 'daily') current.setDate(current.getDate() + 1)
-      else if (r.pattern === 'weekly') current.setDate(current.getDate() + 7)
-      else if (r.pattern === 'every-N-days') current.setDate(current.getDate() + (r.every || 3))
-      else break
-    }
-  }
-  return result
 }
 
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string }> = {
@@ -107,6 +53,30 @@ function getEventColors(event: { project?: string; category?: string }) {
     return PROJECT_TASK_COLORS[event.project]
   }
   return CATEGORY_COLORS[event.category ?? 'other'] ?? CATEGORY_COLORS.other
+}
+
+/** Check if a pending (non-completed) task is overdue — its scheduled time has passed */
+function isTaskOverdue(task: TaskNode, todayStr: string, nowTime: string): boolean {
+  if (task.status === 'completed') return false
+  if (!task.startDate) return false
+
+  // Timed task: check if end time has passed today
+  if (task.startTime) {
+    if (task.startDate < todayStr) return true
+    if (task.startDate === todayStr) {
+      if (task.endTime) return task.endTime <= nowTime
+      return task.startTime <= nowTime
+    }
+    return false
+  }
+
+  // All-day task with endDate: overdue if endDate < today
+  if (task.endDate && task.endDate < todayStr) return true
+
+  // All-day task without endDate: overdue if startDate < today
+  if (!task.endDate && task.startDate < todayStr) return true
+
+  return false
 }
 
 // ── Converters ───────────────────────────────────────────────
@@ -276,15 +246,37 @@ export function CalendarPage() {
     ...taskNodesToFCEvents(datedTasks),
   ]
 
-  const today = new Date().toISOString().slice(0, 10)
+  const now = new Date()
+  const today = now.toISOString().slice(0, 10)
+  const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
   const todayEvents = events.filter((e) => e.date === today)
   const todayTasks = datedTasks.filter(
     (t) => t.startDate && t.startDate <= today && (!t.endDate || t.endDate >= today),
   )
 
-  // Split tasks into pending vs completed
-  const pendingTodayTasks = todayTasks.filter((t) => t.status !== 'completed')
   const completedTodayTasks = todayTasks.filter((t) => t.status === 'completed')
+
+  // All pending tasks scheduled for today or earlier (includes overdue)
+  const allPendingDatedTasks = datedTasks.filter(
+    (t) => t.status !== 'completed' && t.startDate && t.startDate <= today,
+  )
+  // Overdue: time has passed but not completed — sorted by startDate ascending (most overdue first)
+  const overdueTasks = allPendingDatedTasks
+    .filter((t) => isTaskOverdue(t, today, nowTime))
+    .sort((a, b) => {
+      const dateCmp = (a.startDate ?? '').localeCompare(b.startDate ?? '')
+      if (dateCmp !== 0) return dateCmp
+      return (a.startTime ?? '').localeCompare(b.startTime ?? '')
+    })
+  // Today's pending (not overdue) — sorted by startTime
+  const todayPendingTasks = allPendingDatedTasks
+    .filter((t) => !isTaskOverdue(t, today, nowTime))
+    .sort((a, b) => {
+      if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime)
+      if (a.startTime) return -1
+      if (b.startTime) return 1
+      return 0
+    })
 
   // Completed tasks from all dated tasks (recently completed, within last 30 days)
   const thirtyDaysAgo = new Date()
@@ -293,7 +285,7 @@ export function CalendarPage() {
     (t) => t.status === 'completed' && t.startDate && new Date(t.startDate) >= thirtyDaysAgo,
   )
 
-  const hasPendingItems = todayEvents.length > 0 || pendingTodayTasks.length > 0 || undatedTasks.length > 0
+  const hasPendingItems = todayEvents.length > 0 || overdueTasks.length > 0 || todayPendingTasks.length > 0 || undatedTasks.length > 0
   const hasCompletedItems = completedTodayTasks.length > 0 || completedDatedTasks.length > 0
   const hasSidebarItems = hasPendingItems || hasCompletedItems
 
@@ -414,7 +406,7 @@ export function CalendarPage() {
                 待办
                 {hasPendingItems && (
                   <span className="ml-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] text-primary">
-                    {todayEvents.length + pendingTodayTasks.length + undatedTasks.length}
+                    {todayEvents.length + overdueTasks.length + todayPendingTasks.length + undatedTasks.length}
                   </span>
                 )}
               </button>
@@ -440,12 +432,40 @@ export function CalendarPage() {
               {/* Pending tab */}
               {sidebarTab === 'pending' && (
                 <>
+                  {/* Overdue section */}
+                  {overdueTasks.length > 0 && (
+                    <div className="space-y-2">
+                      <h2 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-red-400">
+                        <AlertCircle className="h-3 w-3" />
+                        逾期
+                        <span className="ml-0.5 text-red-400/60">{overdueTasks.length}</span>
+                      </h2>
+                      {overdueTasks.map((t) => {
+                        return (
+                          <div
+                            key={`task-${t.projectSlug}-${t.id}`}
+                            className="flex cursor-pointer items-center gap-2 rounded-md border border-red-500/40 bg-red-500/10 p-2.5 transition-colors hover:opacity-80"
+                            onClick={() => setSelected({ kind: 'task', data: t })}
+                          >
+                            <AlertCircle className="h-3 w-3 flex-shrink-0 text-red-400" />
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs font-medium text-body">{t.title}</div>
+                              <div className="truncate text-[10px] text-dim">
+                                {t.projectSlug} · {t.startDate}{t.startTime ? ` ${t.startTime}${t.endTime ? '-' + t.endTime : ''}` : ''}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
                   {/* Today section */}
-                  {(todayEvents.length > 0 || pendingTodayTasks.length > 0) && (
+                  {(todayEvents.length > 0 || todayPendingTasks.length > 0) && (
                     <div className="space-y-2">
                       <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">
                         今日
-                        <span className="ml-1.5 text-placeholder">{todayEvents.length + pendingTodayTasks.length}</span>
+                        <span className="ml-1.5 text-placeholder">{todayEvents.length + todayPendingTasks.length}</span>
                       </h2>
                       {todayEvents.map((e) => {
                         const colors = getEventColors(e)
@@ -465,7 +485,7 @@ export function CalendarPage() {
                           </div>
                         )
                       })}
-                      {pendingTodayTasks.map((t) => {
+                      {todayPendingTasks.map((t) => {
                         const colors = PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR
                         return (
                           <div

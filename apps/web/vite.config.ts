@@ -73,8 +73,40 @@ export default defineConfig({
     port: 5173,
     open: false,
   },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'react-markdown',
+      'remark-gfm',
+      'rehype-raw',
+      'lucide-react',
+      '@fullcalendar/react',
+      '@fullcalendar/daygrid',
+      '@fullcalendar/interaction',
+      '@fullcalendar/list',
+      '@fullcalendar/timegrid',
+      '@fullcalendar/core',
+      'react-syntax-highlighter',
+      'zustand',
+      'clsx',
+      'tailwind-merge',
+    ],
+  },
   build: {
     outDir: 'dist',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('@fullcalendar')) return 'vendor-fullcalendar'
+          if (id.includes('react-syntax-highlighter')) return 'vendor-syntax-highlight'
+          if (id.includes('react-markdown') || id.includes('remark-gfm') || id.includes('rehype-raw')) return 'vendor-markdown'
+          if (id.includes('react-router-dom') || /node_modules\/react(-dom)?\//.test(id)) return 'vendor-react'
+        },
+      },
+    },
   },
 })
