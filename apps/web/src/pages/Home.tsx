@@ -227,17 +227,19 @@ export function Home() {
 
   const stats = useMemo(() => {
     const daily = getAllDaily()
+    const weekly = getAllWeekly()
     const monthlyCount = daily.filter((d) => d.date?.startsWith(ym)).length
     const latest = daily[0]
+    const latestWeekly = weekly[0]
     const total =
       daily.length +
-      getAllWeekly().length +
+      weekly.length +
       getAllMonthly().length +
       getAllQuarterly().length +
       getAllAnnual().length +
       getAllVision().length +
       getAllAppendix().length
-    return { monthlyCount, latest, total, dailyTotal: daily.length }
+    return { monthlyCount, latest, total, dailyTotal: daily.length, latestWeekly }
   }, [ym, weekKey])
 
   // Recent dailies (last 5)
@@ -295,11 +297,25 @@ export function Home() {
           value={stats.monthlyCount}
           hint={`累计 ${stats.dailyTotal} 篇`}
         />
-        <StatCard
-          label="本周"
-          value={weekKey}
-          hint="ISO 周"
-        />
+        {stats.latestWeekly ? (
+          <Link
+            to={`/weekly/${stats.latestWeekly.slug}`}
+            className="lo-card lo-card-hover group block p-4 transition-colors hover:border-primary/50"
+          >
+            <div className="text-[11px] uppercase tracking-wider text-dim">最新周报</div>
+            <div className="mt-1.5 flex items-start justify-between gap-2">
+              <span className="lo-clamp-2 text-sm font-semibold text-heading group-hover:text-primary-hover">
+                {stats.latestWeekly.title}
+              </span>
+              <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-dim group-hover:text-primary" />
+            </div>
+            <div className="mt-1 font-mono text-[11px] text-dim">
+              {stats.latestWeekly.date?.slice(0, 10)}
+            </div>
+          </Link>
+        ) : (
+          <StatCard label="最新周报" value="—" hint={weekKey} />
+        )}
         {stats.latest ? (
           <Link
             to={`/daily/${stats.latest.slug}`}
