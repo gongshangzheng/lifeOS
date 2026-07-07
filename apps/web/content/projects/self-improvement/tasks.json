@@ -9,7 +9,15 @@
       "endDate": null,
       "description": "健身塑形，提升身体素质",
       "tags": ["健身"],
-      "children": []
+      "children": [
+        { "id": "t1-1", "title": "练胸+三头", "status": "active", "startDate": null, "endDate": null, "description": "平板卧推4×8-12, 上斜哑铃卧推3×10-12, 龙门架夹胸3×12-15, 绳索下压3×12-15, 仰卧臂屈伸3×10-12", "tags": ["健身"], "recurring": { "pattern": "weekly", "startTime": "18:30", "endTime": "20:30", "location": "健身房", "category": "health", "activeFrom": "2026-07-06", "activeUntil": null, "excludeDates": [], "reportLevels": ["daily", "weekly", "monthly"] }, "children": [] },
+        { "id": "t1-2", "title": "练背+二头", "status": "active", "startDate": null, "endDate": null, "description": "引体向上4×8-12, 杠铃划船3×8-10, 高位下拉3×10-12, 坐姿划船3×12-15, 哑铃弯举3×10-12, 锤式弯举3×12-15", "tags": ["健身"], "recurring": { "pattern": "weekly", "startTime": "18:30", "endTime": "20:30", "location": "健身房", "category": "health", "activeFrom": "2026-07-07", "activeUntil": null, "excludeDates": [], "reportLevels": ["daily", "weekly", "monthly"] }, "children": [] },
+        { "id": "t1-3", "title": "有氧+核心", "status": "active", "startDate": null, "endDate": null, "description": "跑步机/椭圆机交替30min(HR140-160), HIIT 15min, 平板支撑3×60s, 俄罗斯转体3×20, 悬垂举腿3×12-15", "tags": ["健身"], "recurring": { "pattern": "weekly", "startTime": "18:30", "endTime": "20:30", "location": "健身房", "category": "health", "activeFrom": "2026-07-08", "activeUntil": null, "excludeDates": [], "reportLevels": ["daily", "weekly", "monthly"] }, "children": [] },
+        { "id": "t1-4", "title": "练腿", "status": "active", "startDate": null, "endDate": null, "description": "深蹲4×8-10, 腿举3×10-12, 罗马尼亚硬拉3×10-12, 腿弯举3×12-15, 小腿提踵3×15-20", "tags": ["健身"], "recurring": { "pattern": "weekly", "startTime": "18:30", "endTime": "20:30", "location": "健身房", "category": "health", "activeFrom": "2026-07-09", "activeUntil": null, "excludeDates": [], "reportLevels": ["daily", "weekly", "monthly"] }, "children": [] },
+        { "id": "t1-5", "title": "练肩+核心", "status": "active", "startDate": null, "endDate": null, "description": "哑铃肩推4×8-10, 侧平举3×12-15, 俯身飞鸟3×12-15, 面拉3×15-20, 平板支撑3×60s, 悬垂举腿3×12-15", "tags": ["健身"], "recurring": { "pattern": "weekly", "startTime": "18:30", "endTime": "20:30", "location": "健身房", "category": "health", "activeFrom": "2026-07-10", "activeUntil": null, "excludeDates": [], "reportLevels": ["daily", "weekly", "monthly"] }, "children": [] },
+        { "id": "t1-6", "title": "无氧全身", "status": "active", "startDate": null, "endDate": null, "description": "硬拉4×6-8, 卧推3×8-10, 引体向上3×8-10, 深蹲3×8-10, 肩推3×10-12", "tags": ["健身"], "recurring": { "pattern": "weekly", "startTime": "18:30", "endTime": "20:30", "location": "健身房", "category": "health", "activeFrom": "2026-07-11", "activeUntil": null, "excludeDates": [], "reportLevels": ["daily", "weekly", "monthly"] }, "children": [] },
+        { "id": "t1-7", "title": "有氧+拉伸恢复", "status": "active", "startDate": null, "endDate": null, "description": "椭圆机30min(低强度HR130-145), 全身拉伸20-30min, 泡沫轴放松15min", "tags": ["健身"], "recurring": { "pattern": "weekly", "startTime": "18:30", "endTime": "20:30", "location": "健身房", "category": "health", "activeFrom": "2026-07-12", "activeUntil": null, "excludeDates": [], "reportLevels": ["daily", "weekly", "monthly"] }, "children": [] }
+      ]
     },
     {
       "id": "t2",

@@ -79,6 +79,8 @@ export interface RecurringConfig {
   every?: number
   startTime?: string
   endTime?: string
+  location?: string
+  category?: string
   activeFrom?: string
   activeUntil?: string | null
   excludeDates?: string[]

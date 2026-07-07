@@ -168,6 +168,40 @@ function formatProjectRecurring(reportLevel) {
   return lines.join('\n')
 }
 
+/** Find project recurring tasks that match a specific date */
+function findProjectRecurringForDate(dateStr) {
+  const tasks = findProjectRecurring('daily')
+  const result = []
+  for (const t of tasks) {
+    const r = t.recurring
+    if (r.activeFrom && r.activeFrom > dateStr) continue
+    if (r.activeUntil && r.activeUntil < dateStr) continue
+    if ((r.excludeDates || []).includes(dateStr)) continue
+    if (r.pattern !== 'daily' && r.activeFrom) {
+      const from = new Date(r.activeFrom + 'T00:00:00')
+      const target = new Date(dateStr + 'T00:00:00')
+      const diffDays = Math.round((target - from) / 86400000)
+      if (r.pattern === 'weekly' && diffDays % 7 !== 0) continue
+      if (r.pattern === 'every-N-days' && diffDays % (r.every || 3) !== 0) continue
+    }
+    result.push(t)
+  }
+  return result
+}
+
+function formatProjectRecurringDaily(dateStr) {
+  const tasks = findProjectRecurringForDate(dateStr)
+  if (tasks.length === 0) return ''
+  const lines = tasks.map((t) => {
+    const r = t.recurring
+    const time = r.startTime && r.endTime ? r.startTime + '-' + r.endTime : r.startTime ? r.startTime : '全天'
+    const loc = r.location ? ' @' + r.location : ''
+    const desc = t.description ? ' — ' + t.description : ''
+    return '- [ ] ' + time + ' ' + t.title + loc + desc
+  })
+  return lines.join('\n')
+}
+
 function formatUndatedTasks() {
   const tasks = findUndatedTasks()
   if (tasks.length === 0) return ''
@@ -318,7 +352,7 @@ function generateDaily(dateStr) {
   const summary = `上层： [${monthStr} 月报](../4-monthly/${monthStr}.md) ｜ [${weekSlug} 周报](../5-weekly/${weekSlug}.md) 同层连续： [前一天日报](../6-daily/${fmtDate(prev)}.md) ｜ [后一天日报](../6-daily/${fmtDate(next)}.md)`
 
   const recurringSection = formatRecurringDaily(dateStr_)
-  const projectRecurring = formatProjectRecurring('daily')
+  const projectRecurring = formatProjectRecurringDaily(dateStr_)
   const undatedSection = formatUndatedTasks()
   const habitSection = formatHabitTasks()
 

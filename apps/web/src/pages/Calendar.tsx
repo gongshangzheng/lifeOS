@@ -183,7 +183,8 @@ function expandProjectRecurring(
           date: ds,
           startTime: r.startTime,
           endTime: r.endTime,
-          category: 'work',
+          location: r.location,
+          category: r.category ?? 'work',
           description: t.description ?? '',
           project: t.projectSlug,
         })
