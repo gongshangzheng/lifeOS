@@ -202,6 +202,55 @@ function formatProjectRecurringDaily(dateStr) {
   return lines.join('\n')
 }
 
+// ── Dated tasks for daily report ─────────────────────────────
+
+function findDatedTasksForDate(dateStr) {
+  const trees = loadAllProjectTrees()
+  const result = []
+  for (const { slug, tree } of trees) {
+    const tasks = tree.tasks || []
+    ;(function find(nodes) {
+      for (const t of nodes) {
+        // Only leaf tasks with startDate, excluding recurring tasks
+        if (t.children.length === 0 && t.startDate && !t.recurring) {
+          // Timed one-time tasks: only show on their exact start date
+          if (t.startTime) {
+            if (t.startDate === dateStr) {
+              result.push({ ...t, projectSlug: slug })
+            }
+          } else if (t.endDate) {
+            // Multi-day all-day tasks: show if within date range
+            if (t.startDate <= dateStr && t.endDate >= dateStr) {
+              result.push({ ...t, projectSlug: slug })
+            }
+          } else {
+            // Single-day all-day tasks: only show on their start date
+            if (t.startDate === dateStr) {
+              result.push({ ...t, projectSlug: slug })
+            }
+          }
+        }
+        if (t.children && t.children.length > 0) find(t.children)
+      }
+    })(tasks)
+  }
+  return result
+}
+
+function formatDatedTasksDaily(dateStr) {
+  const tasks = findDatedTasksForDate(dateStr)
+  if (tasks.length === 0) return ''
+  tasks.sort((a, b) => (a.startTime || '99:99').localeCompare(b.startTime || '99:99'))
+  const lines = tasks.map((t) => {
+    const time = t.startTime && t.endTime ? t.startTime + '-' + t.endTime : t.startTime ? t.startTime : '全天'
+    const loc = t.location ? ' @' + t.location : ''
+    const desc = t.description ? ' — ' + t.description : ''
+    const checked = t.status === 'completed' ? 'x' : ' '
+    return '- [' + checked + '] ' + time + ' ' + t.title + loc + desc
+  })
+  return lines.join('\n')
+}
+
 function formatUndatedTasks() {
   const tasks = findUndatedTasks()
   if (tasks.length === 0) return ''
@@ -355,6 +404,12 @@ function generateDaily(dateStr) {
   const projectRecurring = formatProjectRecurringDaily(dateStr_)
   const undatedSection = formatUndatedTasks()
   const habitSection = formatHabitTasks()
+  const datedSection = formatDatedTasksDaily(dateStr_)
+
+  // Build dated tasks section
+  const datedBlock = datedSection
+    ? '\n---\n\n## 今日计划任务\n\n' + datedSection + '\n'
+    : ''
 
   // Build recurring tasks section (events.json + project recurring)
   const recurringParts = [recurringSection, projectRecurring].filter(Boolean)
@@ -404,7 +459,7 @@ tags:
 
 | 时间 | 事项 | 日历 | 说明 |
 |------|------|------|------|
-|      |      |      |      |${habitBlock}${recurringBlock}${undatedBlock}
+|      |      |      |      |${datedBlock}${habitBlock}${recurringBlock}${undatedBlock}
 ---
 
 ## 规划

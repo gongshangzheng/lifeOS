@@ -103,6 +103,14 @@ export interface TaskNode {
   recurring?: RecurringConfig
   /** Habit tags for daily report tracking (e.g. ["健身", "阅读"]) */
   tags?: string[]
+  /** Start time for one-time timed tasks (HH:MM format) */
+  startTime?: string
+  /** End time for one-time timed tasks (HH:MM format) */
+  endTime?: string
+  /** Location for calendar display */
+  location?: string
+  /** Category for calendar color (study/health/work/social/life/other) */
+  category?: string
   children: TaskNode[]
 }
 

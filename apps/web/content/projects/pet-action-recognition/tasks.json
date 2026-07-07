@@ -7,6 +7,19 @@
       "status": "active",
       "children": [
         {
+          "id": "t1-0",
+          "title": "整理动作检测模型及路线",
+          "status": "completed",
+          "startDate": "2026-07-03",
+          "endDate": null,
+          "startTime": "09:00",
+          "endTime": "11:00",
+          "location": "工位",
+          "category": "study",
+          "description": "整理动作检测模型调研结果，明确后续技术路线",
+          "children": []
+        },
+        {
           "id": "t1-1",
           "title": "任务 1：现有模型调研与方法总结",
           "status": "completed",

@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 // ============================================================
-// lifeOS Event Manager CLI
+// lifeOS Event Manager CLI  [DEPRECATED]
 // ============================================================
-// Manages events and recurring patterns in events.json.
+// DEPRECATED: 所有任务已迁移到 content/projects/{slug}/tasks.json
+// 新任务请直接编辑对应项目的 tasks.json，日报生成使用 generate-report.mjs
+// 本脚本仅保留用于查看历史 events.json 数据
 // Usage:
 //   node scripts/events.mjs list [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--category CAT]
 //   node scripts/events.mjs add --title "..." --date YYYY-MM-DD [--start HH:MM] [--end HH:MM] [--location "..."] [--category study|health|work|social|life|other] [--project SLUG] [--description "..."]

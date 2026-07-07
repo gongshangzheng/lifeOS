@@ -1,0 +1,19 @@
+{
+  "project": "academics",
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "期末复习与考试",
+      "status": "active",
+      "startDate": "2026-07-01",
+      "endDate": "2026-07-03",
+      "description": "期末考试复习、刷题与课程项目报告",
+      "children": [
+        { "id": "t1-1", "title": "复习数字信号处理", "status": "completed", "startDate": "2026-07-01", "endDate": null, "startTime": "09:00", "endTime": "19:00", "location": "工位", "category": "study", "description": "数字信号处理复习（含午休）", "children": [] },
+        { "id": "t1-2", "title": "刷题", "status": "completed", "startDate": "2026-07-01", "endDate": null, "startTime": "19:00", "endTime": "22:00", "location": "工位", "category": "study", "description": "刷题训练", "children": [] },
+        { "id": "t1-3", "title": "考试", "status": "completed", "startDate": "2026-07-02", "endDate": null, "startTime": "15:00", "endTime": "17:30", "category": "study", "description": "期末考试", "children": [] },
+        { "id": "t1-4", "title": "高级图形学大项目最终报告", "status": "completed", "startDate": "2026-07-03", "endDate": null, "startTime": "14:00", "endTime": "17:00", "location": "工位", "category": "study", "description": "高级图形学大项目最终报告", "children": [] }
+      ]
+    }
+  ]
+}

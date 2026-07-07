@@ -96,6 +96,7 @@ const PROJECT_TASK_COLORS: Record<string, { bg: string; border: string; text: st
   'infrared-contour-compression': { bg: 'bg-rose-500/15', border: 'border-rose-500/40', text: 'text-rose-400' },
   'pet-action-recognition': { bg: 'bg-orange-500/15', border: 'border-orange-500/40', text: 'text-orange-400' },
   'internwiki': { bg: 'bg-teal-500/15', border: 'border-teal-500/40', text: 'text-teal-400' },
+  'academics': { bg: 'bg-blue-500/15', border: 'border-blue-500/40', text: 'text-blue-400' },
 }
 
 const DEFAULT_TASK_COLOR = { bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-400' }
@@ -131,8 +132,26 @@ function taskNodesToFCEvents(
 ): EventInput[] {
   return datedTasks.map((t) => {
     const startDate = t.startDate!
+    if (t.startTime) {
+      // Timed event — use start/end with time component
+      return {
+        id: `task-${t.projectSlug}-${t.id}`,
+        title: `[${t.projectSlug}] ${t.title}`,
+        start: `${startDate}T${t.startTime}`,
+        end: t.endTime ? `${startDate}T${t.endTime}` : undefined,
+        extendedProps: {
+          source: 'task',
+          projectSlug: t.projectSlug,
+          taskStatus: t.status,
+          description: t.description ?? '',
+          location: t.location ?? '',
+          category: t.category ?? 'work',
+          taskChildrenCount: t.children?.length ?? 0,
+        },
+      }
+    }
+    // All-day event
     const endDate = t.endDate ?? startDate
-    // FullCalendar endDate is exclusive, so add 1 day for all-day events
     const endExclusive = new Date(endDate)
     endExclusive.setDate(endExclusive.getDate() + 1)
     return {
@@ -140,12 +159,14 @@ function taskNodesToFCEvents(
       title: `[${t.projectSlug}] ${t.title}`,
       start: startDate,
       end: t.endDate ? endExclusive.toISOString().slice(0, 10) : undefined,
-      allDay: !t.startDate?.includes('T'),
+      allDay: true,
       extendedProps: {
         source: 'task',
         projectSlug: t.projectSlug,
         taskStatus: t.status,
         description: t.description ?? '',
+        location: t.location ?? '',
+        category: t.category ?? 'work',
         taskChildrenCount: t.children?.length ?? 0,
       },
     }
@@ -223,19 +244,6 @@ export function CalendarPage() {
     const rangeStartStr = rangeStart.toISOString().slice(0, 10)
     const rangeEndStr = rangeEnd.toISOString().slice(0, 10)
 
-    const loadEvents = fetch('/lifeOS/events.json')
-      .then((res) => res.json())
-      .then((data) => {
-        const oneTime = (data.events ?? []) as CalendarEvent[]
-        const recurring = (data.recurring ?? []) as RecurringEvent[]
-        const expanded = expandRecurring(recurring, rangeStartStr, rangeEndStr)
-        // Merge: expanded recurring events that don't collide with existing event IDs
-        const existingIds = new Set(oneTime.map((e) => e.id))
-        const merged = [...oneTime, ...expanded.filter((e) => !existingIds.has(e.id))]
-        return merged
-      })
-      .catch(() => [] as CalendarEvent[])
-
     const projects = getAllProjects()
     const loadTasks = Promise.all(
       projects.map(async (p) => {
@@ -253,10 +261,10 @@ export function CalendarPage() {
       recurring: results.flatMap((r) => r.recurring),
     }))
 
-    Promise.all([loadEvents, loadTasks]).then(([evts, tasks]) => {
+    loadTasks.then((tasks) => {
       // Expand project recurring tasks into calendar events
       const projectRecurringEvents = expandProjectRecurring(tasks.recurring, rangeStartStr, rangeEndStr)
-      setEvents([...evts, ...projectRecurringEvents])
+      setEvents(projectRecurringEvents)
       setDatedTasks(tasks.dated)
       setUndatedTasks(tasks.undated)
       setLoading(false)
@@ -465,11 +473,17 @@ export function CalendarPage() {
                             className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
                             onClick={() => setSelected({ kind: 'task', data: t })}
                           >
-                            <FolderKanban className={`h-3 w-3 flex-shrink-0 ${colors.text}`} />
+                            {t.startTime ? (
+                              <div className={`text-[11px] font-medium ${colors.text}`}>
+                                {t.startTime}
+                              </div>
+                            ) : (
+                              <FolderKanban className={`h-3 w-3 flex-shrink-0 ${colors.text}`} />
+                            )}
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-xs font-medium text-body">{t.title}</div>
                               <div className="truncate text-[10px] text-dim">
-                                {t.projectSlug} · {t.status}
+                                {t.projectSlug}{t.location ? ` · ${t.location}` : ''}{t.startTime ? ` · ${t.startTime}${t.endTime ? '-' + t.endTime : ''}` : ''}
                               </div>
                             </div>
                           </div>
@@ -628,11 +642,25 @@ export function CalendarPage() {
                   </div>
                   {selected.data.startDate && (
                     <div>
-                      <span className="text-dim">时间：</span>
+                      <span className="text-dim">日期：</span>
                       <span className="font-mono">
                         {selected.data.startDate}
                         {selected.data.endDate ? ` → ${selected.data.endDate}` : ''}
                       </span>
+                    </div>
+                  )}
+                  {selected.data.startTime && (
+                    <div>
+                      <span className="text-dim">时间：</span>
+                      <span className="font-mono">
+                        {selected.data.startTime}{selected.data.endTime ? ` - ${selected.data.endTime}` : ''}
+                      </span>
+                    </div>
+                  )}
+                  {selected.data.location && (
+                    <div>
+                      <span className="text-dim">地点：</span>
+                      {selected.data.location}
                     </div>
                   )}
                   {selected.data.description && (

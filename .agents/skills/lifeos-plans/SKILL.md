@@ -188,15 +188,32 @@ interface TaskNode {
   id: string                  // t-N (普通) 或 r-N (周期)
   title: string
   status: 'planned' | 'active' | 'paused' | 'completed'
-  startDate: string | null
+  startDate: string | null     // 任务日期，出现在日历和日报「今日计划任务」
   endDate: string | null
   description?: string
   notePath?: string
   tags?: string[]             // 习惯标签，如 ["健身", "阅读"]，日报自动生成「习惯打卡」区域
+  startTime?: string          // 顶层开始时间 (HH:MM)，用于一次性定时任务
+  endTime?: string            // 顶层结束时间 (HH:MM)
+  location?: string           // 地点，日历和日报显示
+  category?: string           // 颜色分类 (study/health/work/social/life/other)
   recurring?: RecurringConfig // 周期任务配置
   children: TaskNode[]
 }
 ```
+
+### 统一数据源架构
+
+tasks.json 是唯一数据源，一个任务定义后自动出现在四个端点：
+
+| 任务配置 | 项目树 | Calendar | 日报 | Habits |
+|----------|--------|----------|------|--------|
+| 有 startDate (叶子) | ✓ | ✓ (带时间) | ✓ (今日计划任务) | - |
+| 有 recurring | ✓ | ✓ | ✓ (定期任务) | - |
+| 有 tags | ✓ | - | ✓ (习惯打卡) | ✓ |
+| 无 startDate (叶子) | ✓ | - | ✓ (待安排) | - |
+
+**events.json 已废弃**。所有一次性事件已迁移到对应项目的 tasks.json。
 
 ### 自动级联完成
 
@@ -288,6 +305,8 @@ node scripts/generate-report.mjs quarterly [--date YYYY-QN]
 - interpersonal-relationships（人际关系，active）
 - internship-projects（实习与项目，active）
 - lifeos（lifeOS 本体，active）
+- internwiki（实习文档平台，active）
+- academics（学业，active）
 
 ## 注意事项
 
@@ -295,4 +314,4 @@ node scripts/generate-report.mjs quarterly [--date YYYY-QN]
 2. **summary 字段存导航** — 包含上下层级的 markdown 链接，方便跳转
 3. **任务标记** — `- [ ]` 待办，`- [x]` 已完成，脚本会自动提取
 4. **修改后需 rebuild** — content/ 文件修改后需重新 build 才能在 web 端看到变化
-5. **日历数据独立** — 日历事件存在 `apps/web/public/events.json`，由 `lifeos-events` skill 管理，不在 markdown 中
+5. **统一数据源** — tasks.json 是唯一数据源，events.json 已废弃。所有任务（含一次性事件、周期任务）统一在 tasks.json 中管理，自动同步到日历、日报、Habits
