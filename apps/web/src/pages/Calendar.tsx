@@ -21,6 +21,7 @@ interface CalendarEvent {
   location?: string
   category?: string
   description?: string
+  project?: string
 }
 
 interface RecurringEvent {
@@ -36,6 +37,7 @@ interface RecurringEvent {
   activeFrom: string
   activeUntil?: string | null
   excludeDates: string[]
+  project?: string
 }
 
 /** Expand recurring events into individual instances for a date range */
@@ -64,6 +66,7 @@ function expandRecurring(
           location: r.location,
           category: r.category,
           description: r.description,
+          project: r.project,
         })
       }
       if (r.pattern === 'daily') current.setDate(current.getDate() + 1)
@@ -90,9 +93,19 @@ const PROJECT_TASK_COLORS: Record<string, { bg: string; border: string; text: st
   'self-improvement': { bg: 'bg-amber-500/15', border: 'border-amber-500/40', text: 'text-amber-400' },
   'interpersonal-relationships': { bg: 'bg-pink-500/15', border: 'border-pink-500/40', text: 'text-pink-400' },
   'internship-projects': { bg: 'bg-cyan-500/15', border: 'border-cyan-500/40', text: 'text-cyan-400' },
+  'infrared-contour-compression': { bg: 'bg-rose-500/15', border: 'border-rose-500/40', text: 'text-rose-400' },
+  'pet-action-recognition': { bg: 'bg-orange-500/15', border: 'border-orange-500/40', text: 'text-orange-400' },
 }
 
 const DEFAULT_TASK_COLOR = { bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-400' }
+
+/** Get colors for an event: project color takes priority over category color */
+function getEventColors(event: { project?: string; category?: string }) {
+  if (event.project && PROJECT_TASK_COLORS[event.project]) {
+    return PROJECT_TASK_COLORS[event.project]
+  }
+  return CATEGORY_COLORS[event.category ?? 'other'] ?? CATEGORY_COLORS.other
+}
 
 // ── Converters ───────────────────────────────────────────────
 
@@ -107,6 +120,7 @@ function toFullCalendarEvents(events: CalendarEvent[]): EventInput[] {
       location: e.location ?? '',
       description: e.description ?? '',
       source: 'event',
+      project: e.project ?? '',
     },
   }))
 }
@@ -171,6 +185,7 @@ function expandProjectRecurring(
           endTime: r.endTime,
           category: 'work',
           description: t.description ?? '',
+          project: t.projectSlug,
         })
       }
       if (r.pattern === 'daily') current.setDate(current.getDate() + 1)
@@ -349,7 +364,8 @@ export function CalendarPage() {
                 )
               }
               const cat = arg.event.extendedProps.category as string
-              const colors = CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.other
+              const project = arg.event.extendedProps.project as string
+              const colors = getEventColors({ project: project || undefined, category: cat })
               const isPast = arg.event.end ? arg.event.end < new Date() : false
               const isOngoing =
                 !isPast &&
@@ -419,7 +435,7 @@ export function CalendarPage() {
                     <div className="space-y-2">
                       <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">今日</h2>
                       {todayEvents.map((e) => {
-                        const colors = CATEGORY_COLORS[e.category ?? 'other'] ?? CATEGORY_COLORS.other
+                        const colors = getEventColors(e)
                         return (
                           <div
                             key={e.id}

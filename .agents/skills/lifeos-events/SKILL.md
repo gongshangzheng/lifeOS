@@ -18,19 +18,31 @@
       "location": "工位",
       "category": "study",
       "description": "数字信号处理复习（含午休）"
+    },
+    {
+      "id": "evt-20260706-2030-ir-goal",
+      "title": "红外压缩：明确实现目标",
+      "date": "2026-07-06",
+      "startTime": "20:30",
+      "endTime": "22:00",
+      "location": "工位",
+      "category": "work",
+      "project": "infrared-contour-compression",
+      "description": "确认压缩目标"
     }
   ],
   "recurring": [
     {
-      "id": "recur-run-daily",
-      "title": "跑步 6km",
-      "pattern": "daily",
-      "startTime": "06:30",
-      "endTime": "07:15",
-      "location": "",
+      "id": "recur-fit-mon",
+      "title": "练胸+三头",
+      "pattern": "weekly",
+      "startTime": "18:30",
+      "endTime": "20:30",
+      "location": "健身房",
       "category": "health",
-      "description": "每日跑步 6 千米",
-      "activeFrom": "2026-06-01",
+      "project": "self-improvement",
+      "description": "平板卧推4×8-12...",
+      "activeFrom": "2026-07-06",
       "activeUntil": null,
       "excludeDates": []
     }
@@ -56,6 +68,7 @@
 - `endTime`: 结束时间 `HH:MM`（可选）
 - `location`: 地点（可选）
 - `category`: 分类，见 categories（可选，默认 other）
+- `project`: 关联项目 slug（可选）。设置后日历中该事件使用项目颜色而非分类颜色
 - `description`: 备注（可选）
 - `_recurringId`: 如果由周期任务展开生成，记录来源周期任务 ID（可选）
 
@@ -65,9 +78,31 @@
 - `pattern`: 周期模式 — `daily`（每天）/ `weekly`（每周同一天）/ `every-N-days`（每 N 天）
 - `every`: 当 pattern 为 `every-N-days` 时的 N 值
 - `startTime` / `endTime`: 时间
-- `activeFrom`: 生效起始日期
+- `activeFrom`: 生效起始日期。对于 `weekly` 模式，该日期决定了每周哪一天执行
 - `activeUntil`: 生效结束日期（null 表示无限期）
 - `excludeDates`: 排除日期数组（如节假日跳过）
+- `project`: 关联项目 slug（可选）。设置后日历中该事件使用项目颜色
+
+### 项目颜色映射
+
+日历中的事件颜色按以下优先级渲染：
+
+1. **事件有 `project` 字段** → 使用项目对应颜色
+2. **事件无 `project`** → 使用 `category` 对应颜色
+
+当前项目颜色映射（定义在 `Calendar.tsx` 的 `PROJECT_TASK_COLORS`）：
+
+| 项目 slug | 颜色 |
+|-----------|------|
+| `dingtalk-digital-human` | emerald（绿） |
+| `lifeos` | violet（紫） |
+| `self-improvement` | amber（琥） |
+| `interpersonal-relationships` | pink（粉） |
+| `internship-projects` | cyan（青） |
+| `infrared-contour-compression` | rose（玫红） |
+| `pet-action-recognition` | orange（橙） |
+
+新增项目时，需在 `Calendar.tsx` 的 `PROJECT_TASK_COLORS` 中添加对应颜色。
 
 ## CLI 脚本
 
@@ -79,8 +114,8 @@
 | 命令 | 说明 | 示例 |
 |------|------|------|
 | `list` | 列出事件 | `node scripts/events.mjs list --from 2026-07-01 --to 2026-07-07 --category study` |
-| `add` | 添加单个事件 | `node scripts/events.mjs add --title "复习DSP" --date 2026-07-01 --start 09:00 --end 19:00 --location 工位 --category study` |
-| `add-recurring` | 添加周期任务 | `node scripts/events.mjs add-recurring --title "跑步6km" --pattern daily --start 06:30 --end 07:15 --category health` |
+| `add` | 添加单个事件 | `node scripts/events.mjs add --title "复习DSP" --date 2026-07-01 --start 09:00 --end 19:00 --location 工位 --category study --project infrared-contour-compression` |
+| `add-recurring` | 添加周期任务 | `node scripts/events.mjs add-recurring --title "健身" --pattern weekly --start 18:30 --end 20:30 --category health --project self-improvement --from 2026-07-06` |
 | `update` | 更新事件 | `node scripts/events.mjs update --id evt-xxx --title "新标题" --date 2026-07-02` |
 | `delete` | 删除事件或周期任务 | `node scripts/events.mjs delete --id evt-xxx` |
 | `expand` | 展开周期任务为具体事件 | `node scripts/events.mjs expand --from 2026-07-01 --to 2026-07-31` |
@@ -107,10 +142,10 @@ expand 会跳过已存在的事件（通过 ID 去重），所以可以安全地
 
 ### 当用户说"帮我安排 xxx"时
 
-1. **解析需求**：提取标题、日期、时间、地点、分类
+1. **解析需求**：提取标题、日期、时间、地点、分类、关联项目
 2. **调用 CLI 添加**：
    ```bash
-   node scripts/events.mjs add --title "复习数字信号处理" --date 2026-07-01 --start 09:00 --end 19:00 --location 工位 --category study
+   node scripts/events.mjs add --title "红外压缩整理" --date 2026-07-02 --start 19:00 --end 22:00 --location 工位 --category study --project infrared-contour-compression
    ```
 3. **确认**：告诉用户已添加到日历
 
@@ -118,12 +153,10 @@ expand 会跳过已存在的事件（通过 ID 去重），所以可以安全地
 
 1. 使用 `add-recurring`：
    ```bash
-   node scripts/events.mjs add-recurring --title "健身房" --pattern every-N-days --every 3 --start 18:00 --end 19:30 --location 健身房 --category health
+   # 每周一练胸（activeFrom 设为周一日期，pattern=weekly）
+   node scripts/events.mjs add-recurring --title "练胸+三头" --pattern weekly --start 18:30 --end 20:30 --location 健身房 --category health --project self-improvement --from 2026-07-06
    ```
-2. 然后运行 `expand` 生成近期具体事件：
-   ```bash
-   node scripts/events.mjs expand --from 2026-07-01 --to 2026-07-31
-   ```
+2. `weekly` 模式下，`--from` 的星期几决定了每周哪一天执行
 
 ### 当用户说"查看某天的事件"时
 
@@ -155,18 +188,28 @@ node scripts/events.mjs batch-add --file /tmp/events-batch.json
 
 ### 健康硬约束
 
-Zack 的健康日程是硬约束，在安排其他事件时应注意：
-- 每天跑步 6km（约 06:30-07:15）
-- 每 2-3 天健身房
-- 吃轻食
+Zack 的健身日程是硬约束，每天 18:30-20:30 去健身房，按每周分化训练：
 
-如果用户安排的时间与运动冲突，应主动提醒。
+| 星期 | 训练内容 |
+|------|----------|
+| 周一 | 练胸+三头 |
+| 周二 | 练背+二头 |
+| 周三 | 有氧+核心 |
+| 周四 | 练腿 |
+| 周五 | 练肩+核心 |
+| 周六 | 无氧全身 |
+| 周日 | 有氧+拉伸恢复 |
+
+这些在 events.json 中以 7 个 `weekly` 周期任务实现，每个 `activeFrom` 设为对应星期几的日期。
+
+如果用户安排的时间与健身冲突（18:30-20:30），应主动提醒。
 
 ## 前端展示
 
 ### Calendar 页面
 - 从 `/lifeOS/events.json` fetch 数据
-- 按 category 显示不同颜色的事件标签
+- **颜色优先级**：事件有 `project` 字段 → 使用项目颜色；否则使用 `category` 颜色
+- 项目任务（来自 tasks.json）自动使用项目颜色
 - 点击事件弹出详情 modal
 - 顶部显示"今日事件"卡片
 

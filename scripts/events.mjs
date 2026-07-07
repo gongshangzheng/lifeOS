@@ -5,9 +5,9 @@
 // Manages events and recurring patterns in events.json.
 // Usage:
 //   node scripts/events.mjs list [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--category CAT]
-//   node scripts/events.mjs add --title "..." --date YYYY-MM-DD [--start HH:MM] [--end HH:MM] [--location "..."] [--category study|health|work|social|life|other] [--description "..."]
-//   node scripts/events.mjs add-recurring --title "..." --pattern daily|weekly|every-N-days [--every N] --start HH:MM --end HH:MM [--from YYYY-MM-DD] [--until YYYY-MM-DD] [--location "..."] [--category "..."] [--description "..."]
-//   node scripts/events.mjs update --id EVENT_ID [--title "..."] [--date YYYY-MM-DD] [--start HH:MM] [--end HH:MM] [--location "..."] [--category "..."] [--description "..."]
+//   node scripts/events.mjs add --title "..." --date YYYY-MM-DD [--start HH:MM] [--end HH:MM] [--location "..."] [--category study|health|work|social|life|other] [--project SLUG] [--description "..."]
+//   node scripts/events.mjs add-recurring --title "..." --pattern daily|weekly|every-N-days [--every N] --start HH:MM --end HH:MM [--from YYYY-MM-DD] [--until YYYY-MM-DD] [--location "..."] [--category "..."] [--project SLUG] [--description "..."]
+//   node scripts/events.mjs update --id EVENT_ID [--title "..."] [--date YYYY-MM-DD] [--start HH:MM] [--end HH:MM] [--location "..."] [--category "..."] [--project SLUG] [--description "..."]
 //   node scripts/events.mjs delete --id EVENT_ID
 //   node scripts/events.mjs expand [--from YYYY-MM-DD] [--to YYYY-MM-DD] [--dry-run]
 //   node scripts/events.mjs batch-add --file events-batch.json
@@ -70,6 +70,7 @@ function cmdList(args) {
   if (args.from) events = events.filter((e) => e.date >= args.from)
   if (args.to) events = events.filter((e) => e.date <= args.to)
   if (args.category) events = events.filter((e) => e.category === args.category)
+  if (args.project) events = events.filter((e) => e.project === args.project)
 
   events.sort((a, b) => a.date.localeCompare(b.date) || (a.startTime ?? '').localeCompare(b.startTime ?? ''))
 
@@ -103,6 +104,7 @@ function cmdAdd(args) {
     endTime: args.end || undefined,
     location: args.location || undefined,
     category: args.category || 'other',
+    project: args.project || undefined,
     description: args.description || undefined,
   }
 
@@ -139,6 +141,7 @@ function cmdAddRecurring(args) {
     endTime: args.end,
     location: args.location || undefined,
     category: args.category || 'other',
+    project: args.project || undefined,
     description: args.description || undefined,
     activeFrom: args.from || today(),
     activeUntil: args.until || null,
@@ -170,6 +173,7 @@ function cmdUpdate(args) {
   if (args.end) event.endTime = args.end
   if (args.location !== undefined) event.location = args.location || undefined
   if (args.category) event.category = args.category
+  if (args.project !== undefined) event.project = args.project || undefined
   if (args.description !== undefined) event.description = args.description || undefined
 
   saveEvents(data)
@@ -361,8 +365,8 @@ lifeOS Event Manager CLI
   batch-add     从 JSON 文件批量添加
 
 示例:
-  node scripts/events.mjs add --title "复习DSP" --date 2026-07-01 --start 09:00 --end 19:00 --location 工位 --category study
-  node scripts/events.mjs add-recurring --title "跑步6km" --pattern daily --start 06:30 --end 07:15 --category health
+  node scripts/events.mjs add --title "红外压缩整理" --date 2026-07-02 --start 19:00 --end 22:00 --location 工位 --category study --project infrared-contour-compression
+  node scripts/events.mjs add-recurring --title "练胸+三头" --pattern weekly --start 18:30 --end 20:30 --location 健身房 --category health --project self-improvement --from 2026-07-06
   node scripts/events.mjs expand --from 2026-07-01 --to 2026-07-31
   node scripts/events.mjs list --from 2026-07-01 --to 2026-07-07
   node scripts/events.mjs delete --id evt-20260701-abc123
