@@ -178,6 +178,32 @@ function formatUndatedTasks() {
   return lines.join('\n')
 }
 
+// ── Habit tasks ──────────────────────────────────────────────
+
+function findHabitTasks() {
+  const trees = loadAllProjectTrees()
+  const result = []
+  for (const { slug, tree } of trees) {
+    const tasks = tree.tasks || []
+    ;(function find(nodes) {
+      for (const t of nodes) {
+        if (t.tags && t.tags.length > 0 && t.status !== 'completed') {
+          result.push({ title: t.title, tag: t.tags[0], projectSlug: slug })
+        }
+        if (t.children && t.children.length > 0) find(t.children)
+      }
+    })(tasks)
+  }
+  return result
+}
+
+function formatHabitTasks() {
+  const tasks = findHabitTasks()
+  if (tasks.length === 0) return ''
+  const lines = tasks.map((t) => '- [ ] ' + t.title + ' #' + t.tag)
+  return lines.join('\n')
+}
+
 function formatRecurringWeekly(fromDate, toDate) {
   const tasks = expandRecurringForRange(fromDate, toDate)
   if (tasks.length === 0) return ''
@@ -294,6 +320,7 @@ function generateDaily(dateStr) {
   const recurringSection = formatRecurringDaily(dateStr_)
   const projectRecurring = formatProjectRecurring('daily')
   const undatedSection = formatUndatedTasks()
+  const habitSection = formatHabitTasks()
 
   // Build recurring tasks section (events.json + project recurring)
   const recurringParts = [recurringSection, projectRecurring].filter(Boolean)
@@ -304,6 +331,11 @@ function generateDaily(dateStr) {
   // Build undated tasks section
   const undatedBlock = undatedSection
     ? '\n---\n\n## 待安排\n\n' + undatedSection + '\n'
+    : ''
+
+  // Build habit tracking section
+  const habitBlock = habitSection
+    ? '\n---\n\n## 习惯打卡\n\n' + habitSection + '\n'
     : ''
 
   const content = `---
@@ -338,7 +370,7 @@ tags:
 
 | 时间 | 事项 | 日历 | 说明 |
 |------|------|------|------|
-|      |      |      |      |${recurringBlock}${undatedBlock}
+|      |      |      |      |${habitBlock}${recurringBlock}${undatedBlock}
 ---
 
 ## 规划

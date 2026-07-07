@@ -99,6 +99,8 @@ export interface TaskNode {
   notePath?: string
   /** Recurring task configuration — when set, this task repeats on a schedule */
   recurring?: RecurringConfig
+  /** Habit tags for daily report tracking (e.g. ["健身", "阅读"]) */
+  tags?: string[]
   children: TaskNode[]
 }
 

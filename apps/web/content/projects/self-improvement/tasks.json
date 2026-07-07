@@ -8,6 +8,7 @@
       "startDate": null,
       "endDate": null,
       "description": "健身塑形，提升身体素质",
+      "tags": ["健身"],
       "children": []
     },
     {
@@ -17,6 +18,7 @@
       "startDate": null,
       "endDate": null,
       "description": "学习化妆技巧，建立日常护肤流程",
+      "tags": ["护肤"],
       "children": []
     },
     {
@@ -27,10 +29,34 @@
       "endDate": null,
       "description": "培养多元兴趣爱好",
       "children": [
-        { "id": "t3-1", "title": "看电影", "status": "planned", "startDate": null, "endDate": null, "description": "扩展观影清单，涉猎不同类型", "children": [] },
-        { "id": "t3-2", "title": "看书", "status": "planned", "startDate": null, "endDate": null, "description": "养成定期阅读习惯", "children": [] },
+        { "id": "t3-1", "title": "看电影", "status": "planned", "startDate": null, "endDate": null, "description": "扩展观影清单，涉猎不同类型", "tags": ["娱乐"], "children": [] },
+        { "id": "t3-2", "title": "看书", "status": "planned", "startDate": null, "endDate": null, "description": "养成定期阅读习惯", "tags": ["阅读"], "children": [
+          { "id": "t3-2-1", "title": "红楼梦", "status": "active", "startDate": null, "endDate": null, "description": "目前看到第45章", "tags": ["阅读"], "children": [] }
+        ] },
         { "id": "t3-3", "title": "学吉他", "status": "planned", "startDate": null, "endDate": null, "description": "入门和弦与基本指法", "children": [] },
         { "id": "t3-4", "title": "学画画", "status": "planned", "startDate": null, "endDate": null, "description": "基础素描与色彩练习", "children": [] }
+      ]
+    },
+    {
+      "id": "t4",
+      "title": "看网课",
+      "status": "active",
+      "startDate": null,
+      "endDate": null,
+      "description": "系统学习线上课程，拓展知识面",
+      "tags": ["学习"],
+      "children": []
+    },
+    {
+      "id": "t5",
+      "title": "赚钱",
+      "status": "active",
+      "startDate": null,
+      "endDate": null,
+      "description": "学习理财与投资，建立收入多元化",
+      "children": [
+        { "id": "t5-1", "title": "学习经济学", "status": "planned", "startDate": null, "endDate": null, "description": "系统学习微观/宏观经济学原理", "tags": ["学习"], "children": [] },
+        { "id": "t5-2", "title": "学习炒股", "status": "planned", "startDate": null, "endDate": null, "description": "了解股票市场基本面与技术分析", "tags": ["学习"], "children": [] }
       ]
     }
   ]
