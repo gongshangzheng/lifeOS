@@ -12,6 +12,8 @@ import {
   User,
   FileText,
   ArrowLeft,
+  Clock,
+  MapPin,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -181,6 +183,25 @@ function TaskTreeNode({
               </span>
             )}
 
+            {task.startTime && (
+              <span className="flex flex-shrink-0 items-center gap-0.5 text-[10px] text-dim">
+                <Clock className="h-2.5 w-2.5" />
+                {task.startTime}{task.endTime ? `-${task.endTime}` : ''}
+              </span>
+            )}
+            {!task.startTime && task.startDate && (
+              <span className="flex-shrink-0 text-[10px] text-placeholder">
+                {task.startDate.slice(5)}
+              </span>
+            )}
+
+            {task.location && (
+              <span className="flex flex-shrink-0 items-center gap-0.5 text-[10px] text-placeholder">
+                <MapPin className="h-2.5 w-2.5" />
+                {task.location}
+              </span>
+            )}
+
             {task.notePath && (
               <FileText className="h-3 w-3 flex-shrink-0 text-placeholder" />
             )}
@@ -203,10 +224,18 @@ function TaskTreeNode({
                 执行人: {task.assignee}
               </div>
             )}
-            {task.startDate && (
-              <div className="mt-1.5 font-mono text-[11px] text-dim">
-                {task.startDate.slice(0, 10)}
-                {task.endDate ? ` → ${task.endDate.slice(0, 10)}` : ' → ?'}
+            {(task.startTime || task.startDate) && (
+              <div className="mt-1 flex items-center gap-1 text-[11px] text-dim">
+                <Clock className="h-3 w-3" />
+                {task.startDate && task.startDate.slice(0, 10)}
+                {task.startTime ? ` ${task.startTime}${task.endTime ? `-${task.endTime}` : ''}` : ''}
+                {task.endDate ? ` → ${task.endDate.slice(0, 10)}` : ''}
+              </div>
+            )}
+            {task.location && (
+              <div className="mt-1 flex items-center gap-1 text-[11px] text-dim">
+                <MapPin className="h-3 w-3" />
+                {task.location}
               </div>
             )}
             {hasChildren && (
@@ -418,7 +447,19 @@ function TaskNoteView({ task, projectSlug }: { task: TaskNode; projectSlug: stri
         {task.startDate && (
           <span className="font-mono text-xs text-dim">
             {task.startDate.slice(0, 10)}
-            {task.endDate ? ` → ${task.endDate.slice(0, 10)}` : ' → ?'}
+            {task.endDate ? ` → ${task.endDate.slice(0, 10)}` : ''}
+          </span>
+        )}
+        {task.startTime && (
+          <span className="inline-flex items-center gap-1 text-xs text-dim">
+            <Clock className="h-3 w-3" />
+            {task.startTime}{task.endTime ? ` - ${task.endTime}` : ''}
+          </span>
+        )}
+        {task.location && (
+          <span className="inline-flex items-center gap-1 text-xs text-dim">
+            <MapPin className="h-3 w-3" />
+            {task.location}
           </span>
         )}
       </div>
