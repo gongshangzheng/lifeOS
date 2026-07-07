@@ -1,0 +1,32 @@
+{
+  "project": "life",
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "学习",
+      "status": "active",
+      "startDate": null,
+      "endDate": null,
+      "description": "学习方向：学业复习考试 + 自我提升",
+      "children": [
+        { "id": "t1-1", "title": "academics", "status": "active", "startDate": null, "endDate": null, "description": "学业（复习、考试、课程项目）→ /projects#academics", "children": [] },
+        { "id": "t1-2", "title": "self-improvement", "status": "active", "startDate": null, "endDate": null, "description": "自我提升（健身、阅读、爱好）→ /projects#self-improvement", "children": [] }
+      ]
+    },
+    {
+      "id": "t2",
+      "title": "工作",
+      "status": "active",
+      "startDate": null,
+      "endDate": null,
+      "description": "工作方向：实习项目 + 研究",
+      "children": [
+        { "id": "t2-1", "title": "dingtalk-digital-human", "status": "active", "startDate": null, "endDate": null, "description": "钉钉数字人 → /projects#dingtalk-digital-human", "children": [] },
+        { "id": "t2-2", "title": "infrared-contour-compression", "status": "active", "startDate": null, "endDate": null, "description": "红外轮廓压缩 → /projects#infrared-contour-compression", "children": [] },
+        { "id": "t2-3", "title": "pet-action-recognition", "status": "active", "startDate": null, "endDate": null, "description": "宠物动作识别 → /projects#pet-action-recognition", "children": [] },
+        { "id": "t2-4", "title": "internwiki", "status": "active", "startDate": null, "endDate": null, "description": "实习文档平台 → /projects#internwiki", "children": [] },
+        { "id": "t2-5", "title": "internship-projects", "status": "active", "startDate": null, "endDate": null, "description": "实习与项目 → /projects#internship-projects", "children": [] }
+      ]
+    }
+  ]
+}
