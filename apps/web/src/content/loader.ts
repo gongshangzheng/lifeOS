@@ -128,7 +128,7 @@ function cascadeStatus(tasks: TaskNode[]): TaskNode[] {
 
 export async function getProjectTasks(slug: string): Promise<TaskTree | null> {
   try {
-    const res = await fetch(`/lifeOS/${slug}.tasks.json`)
+    const res = await fetch(`/lifeOS/${slug}.tasks.json`, { cache: 'no-cache' })
     if (!res.ok) return null
     const tree: TaskTree = await res.json()
     return { ...tree, tasks: cascadeStatus(tree.tasks) }

@@ -27,6 +27,7 @@ function projectTasksPlugin(): Plugin {
           const filePath = join(CONTENT_PROJECTS, slug, 'tasks.json')
           if (!existsSync(filePath)) return next()
           res.setHeader('Content-Type', 'application/json')
+          res.setHeader('Cache-Control', 'no-cache')
           res.end(readFileSync(filePath, 'utf-8'))
           return
         }
