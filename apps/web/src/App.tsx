@@ -1,17 +1,6 @@
-import { Routes, Route, NavLink, Outlet, Navigate, Link } from 'react-router-dom'
+import { Routes, Route, NavLink, Outlet, Navigate, Link, useLocation } from 'react-router-dom'
 import { useState, lazy, Suspense } from 'react'
-import {
-  CalendarDays,
-  NotebookPen,
-  CalendarRange,
-  Calendar as CalendarIcon,
-  Target,
-  Compass,
-  BookOpen,
-  Library,
-  FolderKanban,
-  Activity,
-} from 'lucide-react'
+import { CalendarDays, FolderKanban, Activity, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { SearchModal, SearchButton } from '@/components/SearchModal'
@@ -38,21 +27,18 @@ const VisionDetail = lazy(() => rp().then((m) => ({ default: m.VisionDetail })))
 const AppendixList = lazy(() => rp().then((m) => ({ default: m.AppendixList })))
 const AppendixDetail = lazy(() => rp().then((m) => ({ default: m.AppendixDetail })))
 
+const REPORT_PATHS = ['/daily', '/weekly', '/monthly', '/quarterly', '/annual', '/vision', '/appendix']
+
 const NAV: ReadonlyArray<{ to: string; label: string; icon: typeof CalendarDays }> = [
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/habits', label: 'Habits', icon: Activity },
-  { to: '/daily', label: 'Daily', icon: NotebookPen },
-  { to: '/weekly', label: 'Weekly', icon: CalendarRange },
-  { to: '/monthly', label: 'Monthly', icon: CalendarIcon },
-  { to: '/quarterly', label: 'Quarterly', icon: Target },
-  { to: '/annual', label: 'Annual', icon: BookOpen },
-  { to: '/vision', label: 'Vision', icon: Compass },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
-  { to: '/appendix', label: 'Appendix', icon: Library },
 ]
 
 function NavBar() {
   const [searchOpen, setSearchOpen] = useState(false)
+  const { pathname } = useLocation()
+  const reportActive = REPORT_PATHS.some((p) => pathname.startsWith(p))
   return (
     <>
       <header className="lo-nav">
@@ -81,6 +67,18 @@ function NavBar() {
                 {label}
               </NavLink>
             ))}
+            <Link
+              to="/daily"
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
+                reportActive
+                  ? 'bg-primary-subtle text-primary-subtle-foreground'
+                  : 'text-dim hover:bg-muted hover:text-heading',
+              )}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Reports
+            </Link>
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <SearchButton onClick={() => setSearchOpen(true)} />
@@ -119,26 +117,20 @@ export default function App() {
 
         <Route path="habits" element={<HabitsPage />} />
 
-        <Route path="daily" element={<DailyList />} />
-        <Route path="daily/:slug" element={<DailyDetail />} />
-
-        <Route path="weekly" element={<WeeklyList />} />
-        <Route path="weekly/:slug" element={<WeeklyDetail />} />
-
-        <Route path="monthly" element={<MonthlyList />} />
-        <Route path="monthly/:slug" element={<MonthlyDetail />} />
-
-        <Route path="quarterly" element={<QuarterlyList />} />
-        <Route path="quarterly/:slug" element={<QuarterlyDetail />} />
-
-        <Route path="annual" element={<AnnualList />} />
-        <Route path="annual/:slug" element={<AnnualDetail />} />
-
-        <Route path="vision" element={<VisionList />} />
-        <Route path="vision/:slug" element={<VisionDetail />} />
-
         <Route path="projects" element={<ProjectsPage />} />
 
+        <Route path="daily" element={<DailyList />} />
+        <Route path="daily/:slug" element={<DailyDetail />} />
+        <Route path="weekly" element={<WeeklyList />} />
+        <Route path="weekly/:slug" element={<WeeklyDetail />} />
+        <Route path="monthly" element={<MonthlyList />} />
+        <Route path="monthly/:slug" element={<MonthlyDetail />} />
+        <Route path="quarterly" element={<QuarterlyList />} />
+        <Route path="quarterly/:slug" element={<QuarterlyDetail />} />
+        <Route path="annual" element={<AnnualList />} />
+        <Route path="annual/:slug" element={<AnnualDetail />} />
+        <Route path="vision" element={<VisionList />} />
+        <Route path="vision/:slug" element={<VisionDetail />} />
         <Route path="appendix" element={<AppendixList />} />
         <Route path="appendix/:slug" element={<AppendixDetail />} />
 

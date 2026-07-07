@@ -304,7 +304,7 @@ export function Home() {
       latestQuarterly: quarterly[0],
       latestAnnual: annual[0],
     }
-  }, [ym, weekKey])
+  }, [ym])
 
   // Recent dailies (last 5)
   const recentDailies = useMemo(() => getAllDaily().slice(0, 5), [])

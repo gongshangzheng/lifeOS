@@ -454,7 +454,7 @@ function TaskNoteView({ task, projectSlug }: { task: TaskNode; projectSlug: stri
     return () => {
       cancelled = true
     }
-  }, [task.notePath])
+  }, [task.notePath, projectSlug])
 
   return (
     <div>

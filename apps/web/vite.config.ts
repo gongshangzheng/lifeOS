@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { readFileSync, readdirSync, copyFileSync, existsSync } from 'node:fs'
 import { resolve, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const CONTENT_PROJECTS = resolve(__dirname, 'content/projects')
@@ -17,7 +18,7 @@ function projectTasksPlugin(): Plugin {
   return {
     name: 'lifeos-project-tasks',
 
-    configureServer(server: { middlewares: { use: (fn: (req: any, res: any, next: () => void) => void) => void } }) {
+    configureServer(server: { middlewares: { use: (fn: (req: IncomingMessage, res: ServerResponse, next: () => void) => void) => void } }) {
       server.middlewares.use((req, res, next) => {
         const url = req.url ?? ''
         // Match: /lifeOS/{slug}.tasks.json
