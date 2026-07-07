@@ -95,6 +95,7 @@ const PROJECT_TASK_COLORS: Record<string, { bg: string; border: string; text: st
   'internship-projects': { bg: 'bg-cyan-500/15', border: 'border-cyan-500/40', text: 'text-cyan-400' },
   'infrared-contour-compression': { bg: 'bg-rose-500/15', border: 'border-rose-500/40', text: 'text-rose-400' },
   'pet-action-recognition': { bg: 'bg-orange-500/15', border: 'border-orange-500/40', text: 'text-orange-400' },
+  'internwiki': { bg: 'bg-teal-500/15', border: 'border-teal-500/40', text: 'text-teal-400' },
 }
 
 const DEFAULT_TASK_COLOR = { bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-400' }
