@@ -13,7 +13,8 @@ dist-ssr
 *.local
 
 # Project symlinks (point to ~/code/)
-content/projects/*/links
+content/projects/*/code
+content/projects/*/refs
 
 # Editor directories and files
 .vscode/*

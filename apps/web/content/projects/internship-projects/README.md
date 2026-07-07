@@ -41,16 +41,17 @@ timeline:
 
 ## 代码仓库
 
-以下软链接指向 `~/code/` 下的实际项目代码：
+软链接位于各项目文件夹内，指向 `~/code/` 下的实际代码：
 
-```
-links/
-├── digital_human/          → ~/code/digital_human          (数字人评测框架)
-├── infraredComp/           → ~/code/infraredComp           (红外轮廓压缩)
-├── CyberVerse/            → ~/code/CyberVerse            (实时数字人 Agent)
-├── OpenAvatarChat/        → ~/code/OpenAvatarChat        (开源数字人)
-├── Ultralight-Digital-Human/ → ~/code/Ultralight-Digital-Human
-├── ditto-talkinghead/     → ~/code/ditto-talkinghead     (Ditto talking head)
-├── InfiniteTalk/          → ~/code/InfiniteTalk          (InfiniteTalk)
-└── catv2ton/              → ~/code/catv2ton              (图像转换)
-```
+| 项目 | 软链接 | 指向 |
+|------|--------|------|
+| dingtalk-digital-human | `code/` | ~/code/digital_human（评测框架）|
+| dingtalk-digital-human | `refs/CyberVerse` | ~/code/CyberVerse |
+| dingtalk-digital-human | `refs/OpenAvatarChat` | ~/code/OpenAvatarChat |
+| dingtalk-digital-human | `refs/Ultralight-Digital-Human` | ~/code/Ultralight-Digital-Human |
+| dingtalk-digital-human | `refs/ditto-talkinghead` | ~/code/ditto-talkinghead |
+| dingtalk-digital-human | `refs/InfiniteTalk` | ~/code/InfiniteTalk |
+| dingtalk-digital-human | `refs/catv2ton` | ~/code/catv2ton |
+| dingtalk-digital-human | `refs/digital-human-daily` | ~/code/digital-human-daily |
+| infrared-contour-compression | `code/` | ~/code/infraredComp |
+| pet-action-recognition | — | 暂无代码仓库 |
