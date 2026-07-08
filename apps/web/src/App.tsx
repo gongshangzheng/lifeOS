@@ -12,6 +12,7 @@ import {
   FolderKanban,
   Activity,
   Sparkles,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -39,20 +40,13 @@ const VisionDetail = lazy(() => rp().then((m) => ({ default: m.VisionDetail })))
 const AppendixList = lazy(() => rp().then((m) => ({ default: m.AppendixList })))
 const AppendixDetail = lazy(() => rp().then((m) => ({ default: m.AppendixDetail })))
 
-const REPORT_PATHS = ['/daily', '/weekly', '/monthly', '/quarterly', '/annual', '/vision', '/appendix']
+const REPORT_PATHS = ['/report']
 
 const NAV: ReadonlyArray<{ to: string; label: string; icon: typeof CalendarDays }> = [
   { to: '/calendar', label: '日历', icon: CalendarDays },
   { to: '/habits', label: '习惯', icon: Activity },
-  { to: '/daily', label: '日报', icon: NotebookPen },
-  { to: '/weekly', label: '周报', icon: CalendarRange },
-  { to: '/monthly', label: '月报', icon: CalendarIcon },
-  { to: '/quarterly', label: '季报', icon: Target },
-  { to: '/annual', label: '年报', icon: BookOpen },
-  { to: '/vision', label: '愿景', icon: Compass },
+  { to: '/report', label: '报告', icon: FileText },
   { to: '/projects', label: '项目', icon: FolderKanban },
-  { to: '/appendix', label: '附录', icon: Library },
-  { to: '/appendix/first-times', label: '初体验', icon: Sparkles },
 ]
 
 function NavBar() {
@@ -139,20 +133,23 @@ export default function App() {
 
         <Route path="projects" element={<ProjectsPage />} />
 
-        <Route path="daily" element={<DailyList />} />
-        <Route path="daily/:slug" element={<DailyDetail />} />
-        <Route path="weekly" element={<WeeklyList />} />
-        <Route path="weekly/:slug" element={<WeeklyDetail />} />
-        <Route path="monthly" element={<MonthlyList />} />
-        <Route path="monthly/:slug" element={<MonthlyDetail />} />
-        <Route path="quarterly" element={<QuarterlyList />} />
-        <Route path="quarterly/:slug" element={<QuarterlyDetail />} />
-        <Route path="annual" element={<AnnualList />} />
-        <Route path="annual/:slug" element={<AnnualDetail />} />
-        <Route path="vision" element={<VisionList />} />
-        <Route path="vision/:slug" element={<VisionDetail />} />
-        <Route path="appendix" element={<AppendixList />} />
-        <Route path="appendix/:slug" element={<AppendixDetail />} />
+        {/* 报告页面 - 包含所有子类型 */}
+        <Route path="report" element={<DailyList />} />
+        <Route path="report/daily" element={<DailyList />} />
+        <Route path="report/daily/:slug" element={<DailyDetail />} />
+        <Route path="report/weekly" element={<WeeklyList />} />
+        <Route path="report/weekly/:slug" element={<WeeklyDetail />} />
+        <Route path="report/monthly" element={<MonthlyList />} />
+        <Route path="report/monthly/:slug" element={<MonthlyDetail />} />
+        <Route path="report/quarterly" element={<QuarterlyList />} />
+        <Route path="report/quarterly/:slug" element={<QuarterlyDetail />} />
+        <Route path="report/annual" element={<AnnualList />} />
+        <Route path="report/annual/:slug" element={<AnnualDetail />} />
+        <Route path="report/vision" element={<VisionList />} />
+        <Route path="report/vision/:slug" element={<VisionDetail />} />
+        <Route path="report/appendix" element={<AppendixList />} />
+        <Route path="report/appendix/:slug" element={<AppendixDetail />} />
+        <Route path="report/first-times" element={<AppendixList />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

@@ -1,5 +1,5 @@
-import { NavLink } from 'react-router-dom'
-import { FileText, ChevronRight, FolderOpen } from 'lucide-react'
+import { NavLink, useLocation } from 'react-router-dom'
+import { FileText, ChevronRight, FolderOpen, NotebookPen, CalendarRange, Calendar as CalendarIcon, Target, Compass, BookOpen, Library } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { stripMarkdown } from '@/lib/markdown'
 
@@ -11,6 +11,13 @@ export type ReportListItem = {
   category?: string
 }
 
+export type ReportTab = {
+  key: string
+  label: string
+  path: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
 type ReportListProps = {
   title: string
   description?: string
@@ -18,6 +25,7 @@ type ReportListProps = {
   basePath: string
   emptyText?: string
   groupByCategory?: boolean
+  tabs?: ReportTab[]
 }
 
 function formatDate(iso?: string): string | null {
@@ -64,7 +72,10 @@ export function ReportList({
   basePath,
   emptyText = '还没有内容。',
   groupByCategory = false,
+  tabs,
 }: ReportListProps) {
+  const location = useLocation()
+
   // Group items by category when enabled
   const groups: Array<{ category: string; items: ReportListItem[] }> = []
   if (groupByCategory) {
@@ -85,6 +96,30 @@ export function ReportList({
         <h1 className="lo-section-title">{title}</h1>
         {description && <p className="lo-section-desc">{description}</p>}
       </header>
+
+      {/* Tab navigation */}
+      {tabs && tabs.length > 0 && (
+        <div className="flex flex-wrap gap-1 border-b border-border pb-2">
+          {tabs.map((tab) => {
+            const isActive = location.pathname === tab.path || location.pathname === tab.path + '/'
+            return (
+              <NavLink
+                key={tab.key}
+                to={tab.path}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-primary-subtle text-primary-subtle-foreground'
+                    : 'text-dim hover:bg-muted hover:text-heading',
+                )}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </NavLink>
+            )
+          })}
+        </div>
+      )}
 
       {items.length === 0 ? (
         <p className="text-dim">{emptyText}</p>

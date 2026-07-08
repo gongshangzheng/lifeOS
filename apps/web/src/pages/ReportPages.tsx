@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
-import { ReportList, type ReportListItem } from '@/components/ReportList'
+import { NotebookPen, CalendarRange, Calendar as CalendarIcon, Target, Compass, BookOpen, Library } from 'lucide-react'
+import { ReportList, type ReportListItem, type ReportTab } from '@/components/ReportList'
 import { ReportDetail, type ReportDetailItem } from '@/components/ReportDetail'
 import { RelatedReports } from '@/components/RelatedReports'
 import {
@@ -33,57 +34,57 @@ type CollectionConfig<Slug extends string = string> = {
 
 const COLLECTIONS = {
   daily: {
-    label: 'Daily',
+    label: '日报',
     description: '每日复盘 — 任务、进展、思考。',
-    basePath: '/daily',
+    basePath: '/report/daily',
     empty: '还没有日报。',
     listLoader: getAllDaily,
     detailLoader: getDailyBySlug,
   },
   weekly: {
-    label: 'Weekly',
+    label: '周报',
     description: '周计划与周复盘。',
-    basePath: '/weekly',
+    basePath: '/report/weekly',
     empty: '还没有周报。',
     listLoader: getAllWeekly,
     detailLoader: getWeeklyBySlug,
   },
   monthly: {
-    label: 'Monthly',
+    label: '月报',
     description: '月度总结与下月规划。',
-    basePath: '/monthly',
+    basePath: '/report/monthly',
     empty: '还没有月报。',
     listLoader: getAllMonthly,
     detailLoader: getMonthlyBySlug,
   },
   quarterly: {
-    label: 'Quarterly',
+    label: '季报',
     description: '季度 OKR 与阶段回顾。',
-    basePath: '/quarterly',
+    basePath: '/report/quarterly',
     empty: '还没有季报。',
     listLoader: getAllQuarterly,
     detailLoader: getQuarterlyBySlug,
   },
   annual: {
-    label: 'Annual',
+    label: '年报',
     description: '年度复盘与下年规划。',
-    basePath: '/annual',
+    basePath: '/report/annual',
     empty: '还没有年报。',
     listLoader: getAllAnnual,
     detailLoader: getAnnualBySlug,
   },
   vision: {
-    label: 'Vision',
+    label: '愿景',
     description: '愿景、五年与三年规划。',
-    basePath: '/vision',
+    basePath: '/report/vision',
     empty: '还没有愿景文档。',
     listLoader: getAllVision,
     detailLoader: getVisionBySlug,
   },
   appendix: {
-    label: 'Appendix',
+    label: '附录',
     description: '职业规划、公司调研、生活随笔与收藏清单。',
-    basePath: '/appendix',
+    basePath: '/report/appendix',
     empty: '还没有文章。',
     groupByCategory: true,
     listLoader: getAllAppendix,
@@ -93,6 +94,17 @@ const COLLECTIONS = {
 
 type CollectionKey = keyof typeof COLLECTIONS
 
+// 报告类型标签页配置
+const REPORT_TABS: ReportTab[] = [
+  { key: 'daily', label: '日报', path: '/report/daily', icon: NotebookPen },
+  { key: 'weekly', label: '周报', path: '/report/weekly', icon: CalendarRange },
+  { key: 'monthly', label: '月报', path: '/report/monthly', icon: CalendarIcon },
+  { key: 'quarterly', label: '季报', path: '/report/quarterly', icon: Target },
+  { key: 'annual', label: '年报', path: '/report/annual', icon: BookOpen },
+  { key: 'vision', label: '愿景', path: '/report/vision', icon: Compass },
+  { key: 'appendix', label: '附录', path: '/report/appendix', icon: Library },
+]
+
 function makeListPage(key: CollectionKey) {
   const cfg: CollectionConfig = COLLECTIONS[key]
   return function ListPage() {
@@ -101,12 +113,13 @@ function makeListPage(key: CollectionKey) {
       .map((it) => ({ slug: it.slug, title: it.title, date: it.date, summary: it.summary, category: it.category }))
     return (
       <ReportList
-        title={`${cfg.label} Reports`}
+        title={cfg.label}
         description={cfg.description}
         items={items}
         basePath={cfg.basePath}
         emptyText={cfg.empty}
         groupByCategory={cfg.groupByCategory}
+        tabs={REPORT_TABS}
       />
     )
   }
