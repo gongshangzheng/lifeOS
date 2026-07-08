@@ -38,9 +38,7 @@
       "description": "培养多元兴趣爱好",
       "children": [
         { "id": "t3-1", "title": "看电影", "status": "planned", "startDate": null, "endDate": null, "description": "扩展观影清单，涉猎不同类型", "tags": ["娱乐"], "children": [] },
-        { "id": "t3-2", "title": "看书", "status": "planned", "startDate": null, "endDate": null, "description": "养成定期阅读习惯", "tags": ["阅读"], "children": [
-          { "id": "t3-2-1", "title": "红楼梦", "status": "active", "startDate": null, "endDate": null, "description": "目前看到第45章", "tags": ["阅读"], "children": [] }
-        ] },
+        { "id": "t3-2", "title": "红楼梦", "status": "active", "startDate": null, "endDate": null, "description": "目前看到第45章", "tags": ["阅读"], "children": [] },
         { "id": "t3-3", "title": "学吉他", "status": "planned", "startDate": null, "endDate": null, "description": "入门和弦与基本指法", "children": [] },
         { "id": "t3-4", "title": "学画画", "status": "planned", "startDate": null, "endDate": null, "description": "基础素描与色彩练习", "tags": ["爱好"], "children": [] },
         { "id": "t3-5", "title": "学摄影", "status": "planned", "startDate": null, "endDate": null, "description": "学习构图、光影与后期处理", "tags": ["爱好"], "children": [] }

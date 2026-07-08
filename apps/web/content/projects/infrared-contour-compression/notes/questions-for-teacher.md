@@ -53,28 +53,48 @@
 
 **需要确认：** 轮廓提取的输出是二值图（边缘/非边缘）还是灰度图（边缘强度）？
 
-### 问题 4：0.01bpp 的量化理解
+## 候选方案
 
-- CIF 单帧：352 × 288 = **101,376 像素**
-- 0.01bpp 预算：101,376 × 0.01 ≈ **1,014 bits ≈ 127 字节**
-- 这意味着用不到 127 字节编码一整帧轮廓
+大部分轮廓信息编码的算法主要围绕链码方法，是针对二值轮廓图像的。
 
-**需要讨论：**
-- 这个指标是硬约束还是目标值？允许的最大 bpp 是多少？
-- 是否有质量评估标准？（PSNR？SSIM？还是轮廓拓扑保持度？）
-- 是否有参考的 baseline 方案或已有实现？
+### 红外轮廓提取方法
 
-### 问题 5：从 I 帧到视频的路径
+使用 Sobel 算子从红外图像中提取边缘轮廓，效果如下图所示：
 
-当前计划是"先做 I 帧，再做帧间预测"。但 0.002bpp 的视频平均码率意味着：
+![Sobel 算子红外轮廓提取](sobel-contour-extraction.webp)
 
-- 如果 GOP = 10（1 个 I 帧 + 9 个 P 帧），I 帧用 0.01bpp
-- 剩余 9 帧需要平均 **0.001bpp**（约 101 bits/帧）
-- 这几乎只能传输运动矢量 + 极少量残差
+### 二值边缘图像编码方法概览
 
-**需要确认：**
-- 视频中的帧间冗余有多大？轮廓图的帧间变化是否足够小？
-- 是否有典型场景的视频样本可以评估帧间相关性？
+以下为二值边缘图像编码可选的方法：
+
+![二值边缘图像编码方法](binary-edge-encoding-methods.png)
+
+### 可学习链码（Learnable Chain Code）
+
+**参考论文：** [Context Adaptive Extended Chain Coding for Semantic Map Compression (ECC)](https://arxiv.org/abs/2603.03073)（Yang et al., 2026, eess.IV）
+
+- **核心思路**：基于链码（Chain Code）的轮廓跟踪编码，提出扩展链码（ECC）更紧凑地表示长程轮廓转换，保留传统 3OT 链码作为 fallback
+- **熵编码**：上下文自适应的马尔可夫模型 + 熵编码
+- **skip-coding**：消除相邻语义区域间共享轮廓的冗余
+- **效果**：比 SOTA 减少 18% 比特率，编解码运行时间减少 98%/50%
+- **开源代码**：[InterDigitalInc/LosslessSegmentationMapCompression](https://github.com/InterDigitalInc/LosslessSegmentationMapCompression)
+- **与本项目关联**：语义地图的轮廓与红外轮廓图像结构类似，链码方案可直接迁移
+
+### 红外小目标检测方法迁移（洛伦兹空间）
+
+对于红外图像压缩，可以参考红外小目标检测（IRSTD）领域的特征表示方法。
+
+**参考论文：** [LoHGNet: Infrared Small Target Detection through Lorentz Geometric Encoding with High-Order Relation Learning](https://arxiv.org/abs/2605.07213)（Ma et al., 2026, cs.CV）
+
+- **核心思路**：将特征从欧氏空间转换到洛伦兹空间（双曲几何/洛伦兹流形），利用双曲空间的几何性质更好描述弱目标的细微差异和目标-背景关系
+- **关键模块**：
+  - 几何注意力引导的洛伦兹残差卷积模块（GA-LRCM）：在双曲几何约束下做特征建模
+  - 高阶关系学习模块（HORL）：通过对数映射将双曲特征映回欧氏切空间，用超图建模目标-背景的高阶上下文依赖
+- **与本项目关联**：红外轮廓图像中的弱边缘信息与红外小目标有类似的稀疏性特征，洛伦兹空间编码可能提供更紧凑的特征表示，有利于超低码率压缩
+
+![洛伦兹卷积效果](lorentz-convolution-effect.webp)
+
+洛伦兹卷积产生更尖锐紧凑的目标峰值，背景响应被有效压低。
 
 ## 下一步可能的方向
 

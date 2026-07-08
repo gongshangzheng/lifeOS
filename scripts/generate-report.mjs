@@ -417,14 +417,14 @@ function generateDaily(dateStr) {
     ? '\n---\n\n## 定期任务\n\n' + recurringParts.join('\n') + '\n'
     : ''
 
-  // Build undated tasks section
-  const undatedBlock = undatedSection
-    ? '\n---\n\n## 待安排\n\n' + undatedSection + '\n'
-    : ''
-
   // Build habit tracking section
   const habitBlock = habitSection
     ? '\n---\n\n## 习惯打卡\n\n' + habitSection + '\n'
+    : ''
+
+  // Build undated tasks section (placed at the very bottom so it doesn't drown out other content)
+  const undatedBlock = undatedSection
+    ? '\n---\n\n## 待安排\n\n' + undatedSection + '\n'
     : ''
 
   const content = `---
@@ -459,7 +459,7 @@ tags:
 
 | 时间 | 事项 | 日历 | 说明 |
 |------|------|------|------|
-|      |      |      |      |${datedBlock}${habitBlock}${recurringBlock}${undatedBlock}
+|      |      |      |      |${datedBlock}${habitBlock}${recurringBlock}
 ---
 
 ## 规划
@@ -503,7 +503,7 @@ tags:
 ## 日记
 
 -
-`
+${undatedBlock}`
 
   return {
     path: join(DIRS.daily, `${dateStr_}.md`),
@@ -644,7 +644,7 @@ tags:
 ### 阶段划分
 - [ ] 上旬：
 - [ ] 中旬：
-- [ ] 下旬：${recurringBlock}${undatedBlock}
+- [ ] 下旬：${recurringBlock}
 ## 关键数据
 
 | 维度 | 目标 | 实际 |
@@ -654,7 +654,7 @@ tags:
 ## 月度反思
 
 -
-`
+${undatedBlock}`
 
   return {
     path: join(DIRS.monthly, `${monthStr}.md`),

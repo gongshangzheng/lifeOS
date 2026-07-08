@@ -1,6 +1,18 @@
 import { Routes, Route, NavLink, Outlet, Navigate, Link, useLocation } from 'react-router-dom'
 import { useState, lazy, Suspense } from 'react'
-import { CalendarDays, FolderKanban, Activity, FileText } from 'lucide-react'
+import {
+  CalendarDays,
+  NotebookPen,
+  CalendarRange,
+  Calendar as CalendarIcon,
+  Target,
+  Compass,
+  BookOpen,
+  Library,
+  FolderKanban,
+  Activity,
+  Sparkles,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { SearchModal, SearchButton } from '@/components/SearchModal'
@@ -30,9 +42,17 @@ const AppendixDetail = lazy(() => rp().then((m) => ({ default: m.AppendixDetail 
 const REPORT_PATHS = ['/daily', '/weekly', '/monthly', '/quarterly', '/annual', '/vision', '/appendix']
 
 const NAV: ReadonlyArray<{ to: string; label: string; icon: typeof CalendarDays }> = [
-  { to: '/calendar', label: 'Calendar', icon: CalendarDays },
-  { to: '/habits', label: 'Habits', icon: Activity },
-  { to: '/projects', label: 'Projects', icon: FolderKanban },
+  { to: '/calendar', label: '日历', icon: CalendarDays },
+  { to: '/habits', label: '习惯', icon: Activity },
+  { to: '/daily', label: '日报', icon: NotebookPen },
+  { to: '/weekly', label: '周报', icon: CalendarRange },
+  { to: '/monthly', label: '月报', icon: CalendarIcon },
+  { to: '/quarterly', label: '季报', icon: Target },
+  { to: '/annual', label: '年报', icon: BookOpen },
+  { to: '/vision', label: '愿景', icon: Compass },
+  { to: '/projects', label: '项目', icon: FolderKanban },
+  { to: '/appendix', label: '附录', icon: Library },
+  { to: '/appendix/first-times', label: '初体验', icon: Sparkles },
 ]
 
 function NavBar() {

@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, CalendarDays } from 'lucide-react'
+import { ArrowLeft, CalendarDays, Sparkles } from 'lucide-react'
 import { stripMarkdown } from '@/lib/markdown'
 import { MarkdownView } from './MarkdownView'
 import { useEffect, useState } from 'react'
@@ -20,6 +20,8 @@ type ReportDetailProps = {
   notFoundTitle?: string
   /** If set, fetch events.json and display events for this date */
   showEventsForDate?: string
+  /** If set, fetch first-times.json and display first-time experiences for this date */
+  showFirstTimesForDate?: string
 }
 
 interface CalendarEvent {
@@ -97,6 +99,46 @@ function EventsForDate({ date }: { date: string }) {
   )
 }
 
+function FirstTimesForDate({ date }: { date: string }) {
+  const [items, setItems] = useState<{ title: string; note?: string }[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/lifeOS/first-times.json')
+      .then((res) => res.json())
+      .then((data) => {
+        setItems((data.firstTimes ?? []).filter((e: { date: string }) => e.date === date))
+        setLoading(false)
+      })
+      .catch(() => {
+        setItems([])
+        setLoading(false)
+      })
+  }, [date])
+
+  if (loading || items.length === 0) return null
+
+  return (
+    <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-amber-500/80">
+        <Sparkles className="h-3.5 w-3.5" />
+        初体验
+      </div>
+      <div className="mt-3 space-y-1.5">
+        {items.map((e, i) => (
+          <div key={i} className="flex items-start gap-2 text-sm">
+            <span className="text-amber-500/60">✦</span>
+            <span className="text-body">
+              {e.title}
+              {e.note ? <span className="ml-1.5 text-xs text-dim">— {e.note}</span> : null}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function ReportDetail({
   title,
   item,
@@ -104,6 +146,7 @@ export function ReportDetail({
   backLabel,
   notFoundTitle = '未找到',
   showEventsForDate,
+  showFirstTimesForDate,
 }: ReportDetailProps) {
   const { slug = '' } = useParams<{ slug: string }>()
 
@@ -147,6 +190,8 @@ export function ReportDetail({
       </header>
 
       {showEventsForDate && <EventsForDate date={showEventsForDate} />}
+
+      {showFirstTimesForDate && <FirstTimesForDate date={showFirstTimesForDate} />}
 
       <MarkdownView body={item.body} />
     </article>

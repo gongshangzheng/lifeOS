@@ -64,6 +64,34 @@ function getProjectColor(index: number) {
   return PROJECT_COLORS[index % PROJECT_COLORS.length]
 }
 
+// ── URL hash helpers ─────────────────────────────────────────
+//
+// Hash format: "#slug" (project view) or "#slug/taskId" (task detail view).
+// taskId format is like "t1-1" — never contains "/", so "/" is safe as a separator.
+
+function parseHash(): { slug: string | null; taskId: string | null } {
+  const raw = window.location.hash.slice(1)
+  const slash = raw.indexOf('/')
+  if (slash === -1) {
+    return { slug: raw || null, taskId: null }
+  }
+  return {
+    slug: raw.slice(0, slash) || null,
+    taskId: raw.slice(slash + 1) || null,
+  }
+}
+
+function findTaskById(tasks: TaskNode[], id: string): TaskNode | null {
+  for (const task of tasks) {
+    if (task.id === id) return task
+    if (task.children.length > 0) {
+      const found = findTaskById(task.children, id)
+      if (found) return found
+    }
+  }
+  return null
+}
+
 // ── Status legend tooltip ────────────────────────────────────
 
 function StatusLegend() {
@@ -523,14 +551,22 @@ function TaskNoteView({ task, projectSlug }: { task: TaskNode; projectSlug: stri
 export function ProjectsPage() {
   const allProjects = getAllProjects()
   const [activeSlug, setActiveSlug] = useState<string | null>(() => {
-    // Read from URL hash on init, fallback to first project
-    const hash = window.location.hash.slice(1)
-    if (hash && allProjects.some((p) => p.slug === hash)) return hash
+    // Read slug from URL hash on init (hash may be "slug" or "slug/taskId"),
+    // fallback to first project.
+    const { slug } = parseHash()
+    if (slug && allProjects.some((p) => p.slug === slug)) return slug
     return allProjects.length > 0 ? allProjects[0].slug : null
   })
   const [taskTrees, setTaskTrees] = useState<Record<string, TaskTree | null>>({})
   const [loading, setLoading] = useState<Record<string, boolean>>({})
   const [selectedTask, setSelectedTask] = useState<TaskNode | null>(null)
+  // The id mirrors what's in URL hash; selectedTask itself is derived once
+  // the task tree finishes loading (see useEffect below).
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(() => {
+    // Restore selected task id from URL hash on init (e.g. "#slug/t1-1")
+    const { taskId } = parseHash()
+    return taskId
+  })
 
   const loadTaskTree = useCallback(async (slug: string) => {
     if (taskTrees[slug] !== undefined || loading[slug]) return
@@ -547,32 +583,56 @@ export function ProjectsPage() {
     }
   }, [activeSlug]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Listen for hash changes (browser back/forward)
+  // Listen for hash changes (browser back/forward, and our own hash writes)
   useEffect(() => {
     const onHashChange = () => {
-      const hash = window.location.hash.slice(1)
-      if (hash && allProjects.some((p) => p.slug === hash)) {
-        setActiveSlug(hash)
+      const { slug, taskId } = parseHash()
+      if (!slug || !allProjects.some((p) => p.slug === slug)) return
+      if (slug !== activeSlug) {
+        setActiveSlug(slug)
         setSelectedTask(null)
       }
+      setSelectedTaskId(taskId)
+      // No taskId in hash → task detail view is closed.
+      if (!taskId) setSelectedTask(null)
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
-  }, [allProjects])
+  }, [allProjects, activeSlug])
 
   const activeProject = allProjects.find((p) => p.slug === activeSlug) ?? null
   const activeColor = getProjectColor(allProjects.findIndex((p) => p.slug === activeSlug))
   const activeTree = activeSlug ? taskTrees[activeSlug] ?? null : null
   const isLoadingTree = activeSlug ? loading[activeSlug] ?? false : false
 
+  // Restore selected task from URL hash once its task tree is loaded.
+  // Triggers on page refresh with "#slug/taskId" and on back/forward.
+  useEffect(() => {
+    if (!selectedTaskId || !activeTree) return
+    const found = findTaskById(activeTree.tasks, selectedTaskId)
+    if (found) setSelectedTask(found)
+  }, [selectedTaskId, activeTree])
+
   const handleProjectChange = (slug: string) => {
     setActiveSlug(slug)
     setSelectedTask(null)
+    setSelectedTaskId(null)
     loadTaskTree(slug)
     window.location.hash = slug
   }
 
-  const handleBackToReadme = () => setSelectedTask(null)
+  const handleSelectTask = (task: TaskNode) => {
+    // Set both state and URL together so a refresh lands on the same view.
+    setSelectedTask(task)
+    setSelectedTaskId(task.id)
+    if (activeSlug) window.location.hash = `${activeSlug}/${task.id}`
+  }
+
+  const handleBackToReadme = () => {
+    setSelectedTask(null)
+    setSelectedTaskId(null)
+    if (activeSlug) window.location.hash = activeSlug
+  }
 
   return (
     <section className="space-y-6">
@@ -629,7 +689,7 @@ export function ProjectsPage() {
                     parentLines={[]}
                     projectColor={activeColor}
                     selectedId={selectedTask?.id ?? null}
-                    onSelect={setSelectedTask}
+                    onSelect={handleSelectTask}
                   />
                 ))}
               </div>
