@@ -50,20 +50,23 @@ export function internalLinkHref(href: string): string | null {
   // collapse any leading ./ or ../ segments
   const cleaned = path.replace(/^(\.\.?\/)+/, '')
 
-  // case 1: "<dir>/<slug>" — e.g. "4-monthly/2026-06"
+  // case 1: "<dir>/<slug>" — e.g. "4-monthly/2026-06" or "appendix/life/training-notes"
   const dirSlug = cleaned.match(/^([0-9]+-)?([a-z]+)\/(.+)$/i)
   if (dirSlug) {
     const dirKey = `${dirSlug[1] ?? ''}${dirSlug[2]}`
     const route = COLLECTION_DIR_TO_ROUTE[dirKey]
     if (route) {
-      return `/${route}/${dirSlug[3]}`
+      // appendix files live in subdirectories (life/, career/, …)
+      // but velite slug is just the filename. Extract the last segment.
+      const slug = dirSlug[3].includes('/') ? dirSlug[3].split('/').pop()! : dirSlug[3]
+      return `/report/${route}/${slug}`
     }
   }
 
   // case 2: bare slug — look it up across all collections
   const route = findRouteForSlug(cleaned)
   if (route) {
-    return `/${route}/${cleaned}`
+    return `/report/${route}/${cleaned}`
   }
 
   return null

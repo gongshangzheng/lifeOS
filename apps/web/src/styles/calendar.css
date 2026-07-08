@@ -11,6 +11,16 @@
    ============================================================ */
 
 @layer components {
+  /* Override FullCalendar's CSS custom properties to match our token system.
+     FullCalendar uses --fc-border-color (#ddd by default) for all grid lines.
+     In dark mode #ddd looks like pure white — we map it to our --color-border token. */
+  .lo-calendar {
+    --fc-border-color: var(--color-border);
+    --fc-neutral-bg-color: var(--color-muted);
+    --fc-page-bg-color: var(--color-card);
+    --fc-neutral-text-color: var(--color-dim);
+  }
+
   /* ---------- Toolbar ---------------------------------------- */
   .lo-calendar .fc-toolbar.fc-header-toolbar {
     @apply mb-3;
@@ -114,27 +124,19 @@
   }
 
   /* ---------- Events ----------------------------------------- */
-  .lo-calendar .fc-event,
+  .lo-calendar .fc-event {
+    @apply rounded-md border-0 p-0 shadow-none;
+    overflow: hidden;
+  }
   .lo-calendar .fc-event-main,
   .lo-calendar .fc-event-main-frame {
-    @apply rounded-md border-0 bg-transparent p-0 shadow-none;
-  }
-  .lo-calendar .fc-event:hover {
-    @apply bg-transparent;
+    @apply p-0;
   }
   .lo-calendar .fc-event-title {
     @apply text-xs font-medium;
-  }
-
-  /* Event state: past / ongoing / future */
-  .lo-calendar .fc-event-past {
-    @apply text-dim opacity-60;
-  }
-  .lo-calendar .fc-event-ongoing {
-    @apply text-white font-semibold;
-  }
-  .lo-calendar .fc-event-future {
-    @apply text-body;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* Now indicator line & arrow */

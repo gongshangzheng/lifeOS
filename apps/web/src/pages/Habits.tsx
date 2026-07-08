@@ -20,6 +20,15 @@ interface Habit {
   rate: number
 }
 
+interface TagGroup {
+  tag: string
+  habits: Habit[]
+  streak: number
+  bestStreak: number
+  rate: number
+  activeDays: number
+}
+
 // ── Parse & calculate ────────────────────────────────────────
 
 const HABIT_PATTERN = /^[-*]\s+\[([x ])\]\s+(.+?)\s+#(\S+)\s*$/i
@@ -105,32 +114,124 @@ function calcStreak(records: HabitRecord[]): { streak: number; bestStreak: numbe
   return { streak, bestStreak: best }
 }
 
-// ── 30-Day Mini Heatmap ──────────────────────────────────────
+/** 合并同一 tag 下所有习惯的记录，计算组级别的连续天数和完成率 */
+function calcGroupStats(habits: Habit[]): { streak: number; bestStreak: number; rate: number; activeDays: number } {
+  const checkedDates = new Set<string>()
+  const allDates = new Set<string>()
 
-function HabitHeatmap({ habit }: { habit: Habit }) {
+  for (const h of habits) {
+    for (const r of h.records) {
+      allDates.add(r.date)
+      if (r.checked) checkedDates.add(r.date)
+    }
+  }
+
+  const sortedChecked = [...checkedDates].sort()
+
+  // 最长连续
+  let best = 0
+  let current = 0
+  let prevDate: string | null = null
+  for (const d of sortedChecked) {
+    if (prevDate) {
+      const diff = Math.round((new Date(d).getTime() - new Date(prevDate).getTime()) / 86400000)
+      current = diff === 1 ? current + 1 : 1
+    } else {
+      current = 1
+    }
+    best = Math.max(best, current)
+    prevDate = d
+  }
+
+  // 当前连续（从今天往回数）
+  const today = new Date().toISOString().slice(0, 10)
+  let streak = 0
+  if (sortedChecked.length > 0) {
+    const lastChecked = sortedChecked[sortedChecked.length - 1]
+    const daysSince = Math.round((new Date(today).getTime() - new Date(lastChecked).getTime()) / 86400000)
+    if (daysSince <= 1) {
+      streak = 1
+      for (let i = sortedChecked.length - 2; i >= 0; i--) {
+        const diff = Math.round(
+          (new Date(sortedChecked[i + 1]).getTime() - new Date(sortedChecked[i]).getTime()) / 86400000,
+        )
+        if (diff === 1) streak++
+        else break
+      }
+    }
+  }
+
+  const activeDays = checkedDates.size
+  const rate = allDates.size > 0 ? Math.round((checkedDates.size / allDates.size) * 100) : 0
+  return { streak, bestStreak: best, rate, activeDays }
+}
+
+/** 按标签分组 */
+function groupByTag(habits: Habit[]): TagGroup[] {
+  const tagMap = new Map<string, Habit[]>()
+  for (const h of habits) {
+    if (!tagMap.has(h.tag)) tagMap.set(h.tag, [])
+    tagMap.get(h.tag)!.push(h)
+  }
+
+  const groups: TagGroup[] = []
+  for (const [tag, tagHabits] of tagMap) {
+    const stats = calcGroupStats(tagHabits)
+    groups.push({ tag, habits: tagHabits, ...stats })
+  }
+
+  groups.sort((a, b) => b.streak - a.streak || b.bestStreak - a.bestStreak || a.tag.localeCompare(b.tag))
+  return groups
+}
+
+// ── Shared Heatmap for a tag group ───────────────────────────
+
+function TagHeatmap({ habits }: { habits: Habit[] }) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const days: Array<{ date: string; record?: HabitRecord }> = []
+  const totalHabits = habits.length
+
+  const days: Array<{ date: string; checkedCount: number; recordCount: number }> = []
   for (let i = 29; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(d.getDate() - i)
     const ds = d.toISOString().slice(0, 10)
-    const rec = habit.records.find((r) => r.date === ds)
-    days.push({ date: ds, record: rec })
+    let checkedCount = 0
+    let recordCount = 0
+    for (const h of habits) {
+      const rec = h.records.find((r) => r.date === ds)
+      if (rec) {
+        recordCount++
+        if (rec.checked) checkedCount++
+      }
+    }
+    days.push({ date: ds, checkedCount, recordCount })
   }
 
   return (
     <div className="flex flex-wrap gap-1">
       {days.map((day) => {
-        const hasRecord = !!day.record
-        const isChecked = day.record?.checked
+        const hasRecord = day.recordCount > 0
+        const isChecked = day.checkedCount > 0
+        let bgClass = 'bg-muted'
+        if (isChecked) {
+          const ratio = day.checkedCount / totalHabits
+          if (ratio >= 1) bgClass = 'bg-green-500'
+          else if (ratio >= 0.5) bgClass = 'bg-green-500/70'
+          else bgClass = 'bg-green-500/40'
+        } else if (hasRecord) {
+          bgClass = 'bg-red-400/40'
+        }
+        const tip = isChecked
+          ? `${day.date}: ${day.checkedCount}/${totalHabits} 完成`
+          : hasRecord
+            ? `${day.date}: 全部未完成`
+            : `${day.date}: 无记录`
         return (
           <div
             key={day.date}
-            className={`h-4 w-4 rounded-sm transition-colors ${
-              isChecked ? 'bg-green-500' : hasRecord ? 'bg-red-400/40' : 'bg-muted'
-            }`}
-            title={`${day.date}: ${isChecked ? '✓' : hasRecord ? '✗' : '—'}`}
+            className={`h-4 w-4 rounded-sm transition-colors ${bgClass}`}
+            title={tip}
           />
         )
       })}
@@ -138,52 +239,50 @@ function HabitHeatmap({ habit }: { habit: Habit }) {
   )
 }
 
-// ── Habit Card ───────────────────────────────────────────────
+// ── Tag Group Card (shared heatmap + individual habits) ──────
 
-function HabitCard({ habit }: { habit: Habit }) {
-  const total = habit.records.length
-  const checked = habit.records.filter((r) => r.checked).length
+function TagGroupCard({ group }: { group: TagGroup }) {
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const { habits, tag, streak, bestStreak, rate, activeDays } = group
+  const isMulti = habits.length > 1
 
   return (
     <div className="lo-card p-4">
+      {/* Header: tag name + combined stats */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Flame
-            className={`h-4 w-4 ${habit.streak > 0 ? 'text-orange-500' : 'text-dim'}`}
-          />
-          <span className="text-sm font-semibold text-heading">{habit.label}</span>
+          <Flame className={`h-4 w-4 ${streak > 0 ? 'text-orange-500' : 'text-dim'}`} />
+          <span className="text-sm font-semibold text-heading">#{tag}</span>
+          {isMulti && (
+            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-dim">
+              {habits.length}
+            </span>
+          )}
         </div>
-        <span className="rounded bg-muted px-2 py-0.5 text-[10px] text-dim">
-          #{habit.tag}
-        </span>
-      </div>
-
-      <div className="mt-3 grid grid-cols-3 gap-3 text-center">
-        <div>
-          <div className="flex items-center justify-center gap-1 text-lg font-bold text-orange-500">
-            <Flame className="h-3.5 w-3.5" />
-            {habit.streak}
-          </div>
-          <div className="text-[10px] text-dim">连续</div>
-        </div>
-        <div>
-          <div className="text-lg font-bold text-heading">{habit.bestStreak}</div>
-          <div className="text-[10px] text-dim">最长</div>
-        </div>
-        <div>
-          <div className="text-lg font-bold text-heading">{habit.rate}%</div>
-          <div className="text-[10px] text-dim">{checked}/{total}</div>
+        <div className="flex items-center gap-3 text-xs text-dim">
+          <span className="flex items-center gap-0.5">
+            <Flame className="h-3 w-3 text-orange-500" />
+            <strong className="text-orange-500">{streak}</strong>
+          </span>
+          <span>最长 <strong className="text-heading">{bestStreak}</strong></span>
+          <span><strong className="text-heading">{rate}%</strong></span>
         </div>
       </div>
 
-      <div className="mt-4">
-        <HabitHeatmap habit={habit} />
+      {/* Shared heatmap */}
+      <div className="mt-3">
+        <TagHeatmap habits={habits} />
         <div className="mt-1 flex items-center justify-between text-[9px] text-placeholder">
           <span>30 天前</span>
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1">
-              <span className="h-2 w-2 rounded-sm bg-green-500" /> 完成
+              <span className="h-2 w-2 rounded-sm bg-green-500" /> 全部完成
             </span>
+            {isMulti && (
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-sm bg-green-500/40" /> 部分
+              </span>
+            )}
             <span className="flex items-center gap-1">
               <span className="h-2 w-2 rounded-sm bg-red-400/40" /> 未完成
             </span>
@@ -194,6 +293,41 @@ function HabitCard({ habit }: { habit: Habit }) {
           <span>今天</span>
         </div>
       </div>
+
+      {/* Individual habits (only when multiple) */}
+      {isMulti && (
+        <div className="mt-4 max-h-32 overflow-y-auto border-t border-border pt-3">
+          <div className="mb-2 text-[10px] uppercase tracking-wider text-dim">
+            {activeDays} 天活跃 · {habits.length} 个习惯
+          </div>
+          <div className="space-y-1.5">
+            {habits.map((h) => {
+              const todayRec = h.records.find((r) => r.date === todayStr)
+              return (
+                <div key={h.label} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    {todayRec?.checked ? (
+                      <Check className="h-3 w-3 text-green-500" />
+                    ) : todayRec ? (
+                      <X className="h-3 w-3 text-red-400" />
+                    ) : (
+                      <div className="h-3 w-3 rounded-sm border border-border" />
+                    )}
+                    <span className="text-body">{h.label}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-dim">
+                    <span className="flex items-center gap-0.5">
+                      <Flame className="h-3 w-3 text-orange-500/60" />
+                      {h.streak}
+                    </span>
+                    <span>{h.rate}%</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -204,10 +338,12 @@ export function HabitsPage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const { habits, tags } = useMemo(() => parseHabits(), [])
 
-  const filteredHabits = useMemo(() => {
-    if (!selectedTag) return habits
-    return habits.filter((h) => h.tag === selectedTag)
-  }, [habits, selectedTag])
+  const allGroups = useMemo(() => groupByTag(habits), [habits])
+
+  const filteredGroups = useMemo(() => {
+    if (!selectedTag) return allGroups
+    return allGroups.filter((g) => g.tag === selectedTag)
+  }, [allGroups, selectedTag])
 
   const todayStr = new Date().toISOString().slice(0, 10)
   const checkedToday = habits.filter((h) => {
@@ -298,24 +434,28 @@ export function HabitsPage() {
           >
             全部
           </button>
-          {tags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                tag === selectedTag
-                  ? 'border-primary/40 bg-primary-subtle text-primary-subtle-foreground'
-                  : 'border-border bg-card text-dim hover:bg-muted hover:text-heading'
-              }`}
-            >
-              #{tag}
-            </button>
-          ))}
+          {tags.map((tag) => {
+            const count = allGroups.find((g) => g.tag === tag)?.habits.length ?? 0
+            return (
+              <button
+                key={tag}
+                onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  tag === selectedTag
+                    ? 'border-primary/40 bg-primary-subtle text-primary-subtle-foreground'
+                    : 'border-border bg-card text-dim hover:bg-muted hover:text-heading'
+                }`}
+              >
+                #{tag}
+                {count > 1 && <span className="ml-1 opacity-60">{count}</span>}
+              </button>
+            )
+          })}
         </div>
       )}
 
-      {/* Habit cards */}
-      {filteredHabits.length === 0 ? (
+      {/* Tag group cards */}
+      {filteredGroups.length === 0 ? (
         <div className="lo-card p-8 text-center">
           <Activity className="mx-auto h-10 w-10 text-placeholder" />
           <p className="mt-3 text-sm text-dim">日报中还没有带标签的习惯记录。</p>
@@ -326,8 +466,8 @@ export function HabitsPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredHabits.map((habit) => (
-            <HabitCard key={habit.label} habit={habit} />
+          {filteredGroups.map((group) => (
+            <TagGroupCard key={group.tag} group={group} />
           ))}
         </div>
       )}

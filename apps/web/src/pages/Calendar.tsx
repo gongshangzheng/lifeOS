@@ -25,27 +25,29 @@ interface CalendarEvent {
 }
 
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  study: { bg: 'bg-blue-500/15', border: 'border-blue-500/40', text: 'text-blue-400' },
-  health: { bg: 'bg-green-500/15', border: 'border-green-500/40', text: 'text-green-400' },
-  work: { bg: 'bg-amber-500/15', border: 'border-amber-500/40', text: 'text-amber-400' },
-  social: { bg: 'bg-pink-500/15', border: 'border-pink-500/40', text: 'text-pink-400' },
-  life: { bg: 'bg-violet-500/15', border: 'border-violet-500/40', text: 'text-violet-400' },
-  other: { bg: 'bg-gray-500/15', border: 'border-gray-500/40', text: 'text-gray-400' },
+  study: { bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.4)', text: '#60a5fa' },
+  health: { bg: 'rgba(34,197,94,0.15)', border: 'rgba(34,197,94,0.4)', text: '#4ade80' },
+  work: { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)', text: '#fbbf24' },
+  social: { bg: 'rgba(236,72,153,0.15)', border: 'rgba(236,72,153,0.4)', text: '#f472b6' },
+  life: { bg: 'rgba(139,92,246,0.15)', border: 'rgba(139,92,246,0.4)', text: '#a78bfa' },
+  other: { bg: 'rgba(107,114,128,0.15)', border: 'rgba(107,114,128,0.4)', text: '#9ca3af' },
 }
 
 const PROJECT_TASK_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  'dingtalk-digital-human': { bg: 'bg-emerald-500/15', border: 'border-emerald-500/40', text: 'text-emerald-400' },
-  lifeos: { bg: 'bg-violet-500/15', border: 'border-violet-500/40', text: 'text-violet-400' },
-  'self-improvement': { bg: 'bg-amber-500/15', border: 'border-amber-500/40', text: 'text-amber-400' },
-  'interpersonal-relationships': { bg: 'bg-pink-500/15', border: 'border-pink-500/40', text: 'text-pink-400' },
-  'internship-projects': { bg: 'bg-cyan-500/15', border: 'border-cyan-500/40', text: 'text-cyan-400' },
-  'infrared-contour-compression': { bg: 'bg-rose-500/15', border: 'border-rose-500/40', text: 'text-rose-400' },
-  'pet-action-recognition': { bg: 'bg-orange-500/15', border: 'border-orange-500/40', text: 'text-orange-400' },
-  'internwiki': { bg: 'bg-teal-500/15', border: 'border-teal-500/40', text: 'text-teal-400' },
-  'academics': { bg: 'bg-blue-500/15', border: 'border-blue-500/40', text: 'text-blue-400' },
+  'dingtalk-digital-human': { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.4)', text: '#34d399' },
+  lifeos: { bg: 'rgba(139,92,246,0.15)', border: 'rgba(139,92,246,0.4)', text: '#a78bfa' },
+  'self-improvement': { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)', text: '#fbbf24' },
+  'interpersonal-relationships': { bg: 'rgba(236,72,153,0.15)', border: 'rgba(236,72,153,0.4)', text: '#f472b6' },
+  'internship-projects': { bg: 'rgba(6,182,212,0.15)', border: 'rgba(6,182,212,0.4)', text: '#22d3ee' },
+  'infrared-contour-compression': { bg: 'rgba(244,63,94,0.15)', border: 'rgba(244,63,94,0.4)', text: '#fb7185' },
+  'pet-action-recognition': { bg: 'rgba(249,115,22,0.15)', border: 'rgba(249,115,22,0.4)', text: '#fb923c' },
+  internwiki: { bg: 'rgba(20,184,166,0.15)', border: 'rgba(20,184,166,0.4)', text: '#2dd4bf' },
+  academics: { bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.4)', text: '#60a5fa' },
 }
 
-const DEFAULT_TASK_COLOR = { bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-400' }
+const DEFAULT_TASK_COLOR = { bg: 'rgba(99,102,241,0.15)', border: 'rgba(99,102,241,0.4)', text: '#818cf8' }
+
+const COMPLETED_TASK_COLOR = { bg: 'rgba(113,113,122,0.12)', border: 'rgba(113,113,122,0.25)', text: '#a1a1aa' }
 
 /** Get colors for an event: project color takes priority over category color */
 function getEventColors(event: { project?: string; category?: string }) {
@@ -82,19 +84,25 @@ function isTaskOverdue(task: TaskNode, todayStr: string, nowTime: string): boole
 // ── Converters ───────────────────────────────────────────────
 
 function toFullCalendarEvents(events: CalendarEvent[]): EventInput[] {
-  return events.map((e) => ({
-    id: e.id,
-    title: e.title,
-    start: e.startTime ? `${e.date}T${e.startTime}` : e.date,
-    end: e.endTime ? `${e.date}T${e.endTime}` : undefined,
-    extendedProps: {
-      category: e.category ?? 'other',
-      location: e.location ?? '',
-      description: e.description ?? '',
-      source: 'event',
-      project: e.project ?? '',
-    },
-  }))
+  return events.map((e) => {
+    const colors = getEventColors({ project: e.project || undefined, category: e.category })
+    return {
+      id: e.id,
+      title: e.title,
+      start: e.startTime ? `${e.date}T${e.startTime}` : e.date,
+      end: e.endTime ? `${e.date}T${e.endTime}` : undefined,
+      backgroundColor: colors.bg,
+      borderColor: colors.border,
+      extendedProps: {
+        category: e.category ?? 'other',
+        location: e.location ?? '',
+        description: e.description ?? '',
+        source: 'event',
+        project: e.project ?? '',
+        colorText: colors.text,
+      },
+    }
+  })
 }
 
 function taskNodesToFCEvents(
@@ -102,22 +110,32 @@ function taskNodesToFCEvents(
 ): EventInput[] {
   return datedTasks.map((t) => {
     const startDate = t.startDate!
+    const isCompleted = t.status === 'completed'
+    const colors = isCompleted
+      ? COMPLETED_TASK_COLOR
+      : (PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR)
+    const commonProps = {
+      id: `task-${t.projectSlug}-${t.id}`,
+      title: `[${t.projectSlug}] ${t.title}`,
+      backgroundColor: colors.bg,
+      borderColor: colors.border,
+      extendedProps: {
+        source: 'task' as const,
+        projectSlug: t.projectSlug,
+        taskStatus: t.status,
+        description: t.description ?? '',
+        location: t.location ?? '',
+        category: t.category ?? 'work',
+        taskChildrenCount: t.children?.length ?? 0,
+        colorText: colors.text,
+        isCompleted,
+      },
+    }
     if (t.startTime) {
-      // Timed event — use start/end with time component
       return {
-        id: `task-${t.projectSlug}-${t.id}`,
-        title: `[${t.projectSlug}] ${t.title}`,
+        ...commonProps,
         start: `${startDate}T${t.startTime}`,
         end: t.endTime ? `${startDate}T${t.endTime}` : undefined,
-        extendedProps: {
-          source: 'task',
-          projectSlug: t.projectSlug,
-          taskStatus: t.status,
-          description: t.description ?? '',
-          location: t.location ?? '',
-          category: t.category ?? 'work',
-          taskChildrenCount: t.children?.length ?? 0,
-        },
       }
     }
     // All-day event
@@ -125,20 +143,10 @@ function taskNodesToFCEvents(
     const endExclusive = new Date(endDate)
     endExclusive.setDate(endExclusive.getDate() + 1)
     return {
-      id: `task-${t.projectSlug}-${t.id}`,
-      title: `[${t.projectSlug}] ${t.title}`,
+      ...commonProps,
       start: startDate,
       end: t.endDate ? endExclusive.toISOString().slice(0, 10) : undefined,
       allDay: true,
-      extendedProps: {
-        source: 'task',
-        projectSlug: t.projectSlug,
-        taskStatus: t.status,
-        description: t.description ?? '',
-        location: t.location ?? '',
-        category: t.category ?? 'work',
-        taskChildrenCount: t.children?.length ?? 0,
-      },
     }
   })
 }
@@ -336,7 +344,8 @@ export function CalendarPage() {
             nowIndicator
             events={fcEvents}
             height="auto"
-            eventDisplay="block"
+            eventDisplay="auto"
+            slotEventOverlap={false}
             eventClick={(info) => {
               const id = info.event.id
               // Check if it's a task event
@@ -351,36 +360,23 @@ export function CalendarPage() {
               }
             }}
             eventContent={(arg) => {
-              const source = arg.event.extendedProps.source as string
-              if (source === 'task') {
-                const slug = arg.event.extendedProps.projectSlug as string
-                const status = arg.event.extendedProps.taskStatus as string
-                const isCompleted = status === 'completed'
-                const colors = isCompleted
-                  ? { bg: 'bg-zinc-500/15', border: 'border-zinc-500/30', text: 'text-zinc-400' }
-                  : (PROJECT_TASK_COLORS[slug] ?? DEFAULT_TASK_COLOR)
-                return (
-                  <div className={`rounded px-1 py-0.5 text-xs ${colors.bg} ${isCompleted ? 'line-through opacity-60' : ''}`}>
-                    {arg.event.title}
-                  </div>
-                )
-              }
-              const cat = arg.event.extendedProps.category as string
-              const project = arg.event.extendedProps.project as string
-              const colors = getEventColors({ project: project || undefined, category: cat })
+              const isCompleted = arg.event.extendedProps.isCompleted as boolean | undefined
               const isPast = arg.event.end ? arg.event.end < new Date() : false
               const isOngoing =
                 !isPast &&
                 arg.event.start &&
                 arg.event.start <= new Date() &&
                 (!arg.event.end || arg.event.end > new Date())
-              const stateClass = isPast
-                ? 'fc-event-past'
-                : isOngoing
-                  ? 'fc-event-ongoing'
-                  : 'fc-event-future'
               return (
-                <div className={`rounded px-1 py-0.5 text-xs ${colors.bg} ${stateClass}`}>
+                <div
+                  className="rounded px-1.5 py-0.5 text-xs overflow-hidden"
+                  style={{
+                    color: 'var(--color-body)',
+                    opacity: isCompleted ? 0.55 : isPast ? 0.5 : isOngoing ? 1 : 0.85,
+                    fontWeight: isOngoing ? 600 : 400,
+                    textDecoration: isCompleted ? 'line-through' : 'none',
+                  }}
+                >
                   {arg.event.title}
                 </div>
               )
@@ -472,10 +468,11 @@ export function CalendarPage() {
                         return (
                           <div
                             key={e.id}
-                            className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
+                            className="flex cursor-pointer items-center gap-2 rounded-md p-2.5 transition-colors hover:opacity-80"
+                            style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
                             onClick={() => setSelected({ kind: 'event', data: e })}
                           >
-                            <div className={`text-[11px] font-medium ${colors.text}`}>
+                            <div className="text-[11px] font-medium" style={{ color: colors.text }}>
                               {e.startTime ?? '—'}
                             </div>
                             <div className="min-w-0 flex-1">
@@ -490,15 +487,16 @@ export function CalendarPage() {
                         return (
                           <div
                             key={`task-${t.projectSlug}-${t.id}`}
-                            className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
+                            className="flex cursor-pointer items-center gap-2 rounded-md p-2.5 transition-colors hover:opacity-80"
+                            style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
                             onClick={() => setSelected({ kind: 'task', data: t })}
                           >
                             {t.startTime ? (
-                              <div className={`text-[11px] font-medium ${colors.text}`}>
+                              <div className="text-[11px] font-medium" style={{ color: colors.text }}>
                                 {t.startTime}
                               </div>
                             ) : (
-                              <FolderKanban className={`h-3 w-3 flex-shrink-0 ${colors.text}`} />
+                              <FolderKanban className="h-3 w-3 flex-shrink-0" style={{ color: colors.text }} />
                             )}
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-xs font-medium text-body">{t.title}</div>
@@ -524,10 +522,11 @@ export function CalendarPage() {
                         return (
                           <div
                             key={`task-${t.projectSlug}-${t.id}`}
-                            className={`flex cursor-pointer items-center gap-2 rounded-md border ${colors.border} ${colors.bg} p-2.5 transition-colors hover:opacity-80`}
+                            className="flex cursor-pointer items-center gap-2 rounded-md p-2.5 transition-colors hover:opacity-80"
+                            style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
                             onClick={() => setSelected({ kind: 'task', data: t })}
                           >
-                            <FolderKanban className={`h-3 w-3 flex-shrink-0 ${colors.text}`} />
+                            <FolderKanban className="h-3 w-3 flex-shrink-0" style={{ color: colors.text }} />
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-xs font-medium text-body">{t.title}</div>
                               <div className="truncate text-[10px] text-dim">
@@ -553,19 +552,23 @@ export function CalendarPage() {
                   {completedTodayTasks.length > 0 && (
                     <div className="space-y-2">
                       <h2 className="text-xs font-semibold uppercase tracking-wider text-dim">今日完成</h2>
-                      {completedTodayTasks.map((t) => (
-                        <div
-                          key={`task-${t.projectSlug}-${t.id}`}
-                          className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-500/30 bg-zinc-500/15 p-2.5 opacity-70 transition-colors hover:opacity-90"
-                          onClick={() => setSelected({ kind: 'task', data: t })}
-                        >
-                          <Check className="h-3 w-3 flex-shrink-0 text-green-500" />
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-xs font-medium text-body line-through">{t.title}</div>
-                            <div className="truncate text-[10px] text-dim">{t.projectSlug}</div>
+                      {completedTodayTasks.map((t) => {
+                        const colors = PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR
+                        return (
+                          <div
+                            key={`task-${t.projectSlug}-${t.id}`}
+                            className="flex cursor-pointer items-center gap-2 rounded-md p-2.5 opacity-60 transition-colors hover:opacity-90"
+                            style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
+                            onClick={() => setSelected({ kind: 'task', data: t })}
+                          >
+                            <Check className="h-3 w-3 flex-shrink-0 text-green-500" />
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs font-medium text-body line-through">{t.title}</div>
+                              <div className="truncate text-[10px] text-dim">{t.projectSlug}</div>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
 
@@ -576,21 +579,25 @@ export function CalendarPage() {
                         近期完成
                         <span className="ml-1.5 text-placeholder">{completedDatedTasks.length}</span>
                       </h2>
-                      {completedDatedTasks.map((t) => (
-                        <div
-                          key={`task-${t.projectSlug}-${t.id}`}
-                          className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-500/30 bg-zinc-500/15 p-2.5 opacity-70 transition-colors hover:opacity-90"
-                          onClick={() => setSelected({ kind: 'task', data: t })}
-                        >
-                          <Check className="h-3 w-3 flex-shrink-0 text-green-500" />
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-xs font-medium text-body line-through">{t.title}</div>
-                            <div className="truncate text-[10px] text-dim">
-                              {t.projectSlug} · {t.startDate}
+                      {completedDatedTasks.map((t) => {
+                        const colors = PROJECT_TASK_COLORS[t.projectSlug] ?? DEFAULT_TASK_COLOR
+                        return (
+                          <div
+                            key={`task-${t.projectSlug}-${t.id}`}
+                            className="flex cursor-pointer items-center gap-2 rounded-md p-2.5 opacity-60 transition-colors hover:opacity-90"
+                            style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
+                            onClick={() => setSelected({ kind: 'task', data: t })}
+                          >
+                            <Check className="h-3 w-3 flex-shrink-0 text-green-500" />
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-xs font-medium text-body line-through">{t.title}</div>
+                              <div className="truncate text-[10px] text-dim">
+                                {t.projectSlug} · {t.startDate}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
 
