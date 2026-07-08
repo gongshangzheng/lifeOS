@@ -11,6 +11,16 @@ tags:
   - 视频理解
   - 边缘部署
 summary: 面向室内猫咪居家场景的端侧宠物行为识别摄像头产品，核心能力包括实时行为识别、异常场景告警、亮点抓取与结构化事件输出，BOM 成本约束 500 元以内。
+participants:
+  - name: 汤问
+    role: 负责人
+  - name: 吴赟阳
+    role: 参与者
+  - name: 乔欣
+    role: 指导者
+    description: 乔老师
+  - name: 徐汪洋
+    role: 审查者
 timeline:
   - date: 2026-06-29
     title: 项目启动

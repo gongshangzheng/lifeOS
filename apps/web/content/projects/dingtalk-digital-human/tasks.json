@@ -70,7 +70,8 @@
         { "id": "t3-3", "title": "无参视频质量评测模型调研", "status": "active", "startDate": null, "endDate": null, "description": "除 TOPIQ 外调研更多 no-reference 视频质量评测模型，补充有参方案对照", "children": [] },
         { "id": "t3-4", "title": "输出一版完整评测结果", "status": "planned", "startDate": null, "endDate": null, "description": "优化完成后对所有模型进行一次完整评测", "children": [] },
         { "id": "t3-5", "title": "合并代码", "status": "completed", "startDate": "2026-07-07", "endDate": null, "startTime": "09:00", "endTime": "10:30", "location": "工位", "category": "work", "description": "合并各分支代码到主分支", "children": [] },
-        { "id": "t3-6", "title": "跑通评测代码全流程", "status": "active", "startDate": "2026-07-07", "endDate": null, "startTime": "14:00", "endTime": "17:30", "location": "工位", "category": "work", "description": "端到端跑通评测代码的完整流程，验证各环节可用", "children": [] }
+        { "id": "t3-6", "title": "跑通评测代码全流程", "status": "completed", "startDate": "2026-07-07", "endDate": "2026-07-08", "startTime": "14:00", "endTime": "17:30", "location": "工位", "category": "work", "description": "端到端跑通评测代码的完整流程，验证各环节可用", "children": [] },
+        { "id": "t3-7", "title": "评测框架 Web UI 搭建", "status": "completed", "startDate": "2026-07-08", "endDate": "2026-07-08", "startTime": "09:00", "endTime": "10:30", "location": "工位", "category": "work", "description": "基于 Gradio 搭建评测框架可视化界面（webui.py），包含评测配置、实时日志、结果总览、报告查看和系统信息四个 Tab", "children": [] }
       ]
     },
     {
@@ -83,8 +84,24 @@
       "children": [
         { "id": "t4-1", "title": "近实时模型部署", "status": "planned", "startDate": null, "endDate": null, "description": "近实时数字人模型部署与效果测试", "children": [] },
         { "id": "t4-2", "title": "非实时模型部署", "status": "planned", "startDate": null, "endDate": null, "description": "非实时数字人模型部署与效果测试", "children": [] },
-        { "id": "t4-3", "title": "搜集近实时数字人项目（调研）", "status": "active", "startDate": "2026-07-07", "endDate": null, "startTime": "10:30", "endTime": "12:00", "location": "工位", "category": "work", "description": "调研近实时数字人开源项目，整理候选列表", "children": [] },
-        { "id": "t4-4", "title": "封装到评测框架", "status": "planned", "startDate": "2026-07-08", "endDate": null, "startTime": "14:00", "endTime": "17:00", "location": "工位", "category": "work", "description": "对候选项目进行适配封装，补充到现有评测框架中", "children": [] }
+        { "id": "t4-3", "title": "搜集近实时数字人项目（调研）", "status": "completed", "startDate": "2026-07-07", "endDate": "2026-07-08", "startTime": "10:30", "endTime": "12:00", "location": "工位", "category": "work", "description": "调研近实时数字人开源项目，整理候选列表", "children": [] },
+        {
+          "id": "t4-4",
+          "title": "封装到评测框架",
+          "status": "active",
+          "startDate": "2026-07-08",
+          "endDate": null,
+          "startTime": "14:00",
+          "endTime": "17:00",
+          "location": "工位",
+          "category": "work",
+          "description": "对候选项目进行适配封装，补充到现有评测框架中",
+          "children": [
+            { "id": "t4-4-1", "title": "LivePortrait 适配评测系统", "status": "active", "startDate": "2026-07-08", "endDate": null, "startTime": "14:00", "endTime": "15:10", "location": "工位", "category": "work", "description": "阅读 LivePortrait 源码，编写模型适配器接入评测框架，跑通推理与指标评测流程", "children": [] },
+            { "id": "t4-4-2", "title": "Ditto 适配评测系统", "status": "planned", "startDate": "2026-07-08", "endDate": null, "startTime": "15:10", "endTime": "16:10", "location": "工位", "category": "work", "description": "基于 ditto-talkinghead 源码，编写模型适配器接入评测框架，跑通推理与指标评测流程", "children": [] },
+            { "id": "t4-4-3", "title": "ToonTalker 适配评测系统", "status": "planned", "startDate": "2026-07-08", "endDate": null, "startTime": "16:10", "endTime": "17:00", "location": "工位", "category": "work", "description": "阅读 ToonTalker 源码，编写模型适配器接入评测框架，跑通推理与指标评测流程", "children": [] }
+          ]
+        }
       ]
     },
     {

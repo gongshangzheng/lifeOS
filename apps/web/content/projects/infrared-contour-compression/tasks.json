@@ -25,7 +25,7 @@
       "description": "核心目标：将单帧轮廓图像压缩至 0.01bpp 以下。CIF 352×288 = 101,376px，即 < 1014 bits/帧",
       "children": [
         { "id": "t2-0", "title": "明确实现目标", "status": "completed", "startDate": "2026-07-06", "endDate": "2026-07-06", "startTime": "20:30", "endTime": "22:00", "location": "工位", "category": "work", "description": "确认压缩目标：CIF 352×288 轮廓图 → 0.01bpp（< 1014 bits）。明确输入格式（二值/灰度）、输出质量要求、评测指标", "children": [] },
-        { "id": "t2-1", "title": "文献调研：超低码率轮廓/二值图压缩方法", "status": "active", "startDate": "2026-06-15", "endDate": null, "description": "JBIG2、游程编码、链码、轮廓跟踪编码等方案", "children": [] },
+        { "id": "t2-1", "title": "文献调研：超低码率轮廓/二值图压缩方法", "status": "completed", "startDate": "2026-06-15", "endDate": "2026-07-08", "description": "JBIG2、游程编码、链码、轮廓跟踪编码等方案", "children": [] },
         { "id": "t2-2", "title": "确定可行路径", "status": "active", "startDate": "2026-07-07", "endDate": "2026-07-07", "startTime": "20:30", "endTime": "22:00", "location": "工位", "category": "work", "description": "在文献调研基础上选定压缩方案（链码/JBIG2/游程编码等），明确编码框架与模块划分", "children": [] },
         { "id": "t2-3", "title": "方案设计：0.01bpp 约束下的压缩框架", "status": "planned", "startDate": null, "endDate": null, "description": "在 1014 bits 预算内编码一帧 352×288 轮廓图", "children": [] },
         { "id": "t2-4", "title": "开始具体测试代码实现", "status": "planned", "startDate": "2026-07-08", "endDate": "2026-07-12", "startTime": "20:30", "endTime": "22:30", "location": "工位", "category": "work", "description": "基于选定方案搭建编码管线雏形，在标准测试集上验证 bpp 和重建质量", "children": [] },

@@ -1,12 +1,12 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type ReactNode, type ComponentProps } from 'react'
 import { Link } from 'react-router-dom'
-import ReactMarkdown, { type Components } from 'react-markdown'
+import ReactMarkdown, { type Components, type ExtraProps } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Check, Copy } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, slugify } from '@/lib/utils'
 import { internalLinkHref } from '@/lib/markdown'
 
 type CodeProps = {
@@ -112,7 +112,31 @@ function MarkdownLink({
   )
 }
 
+function extractText(node: ReactNode): string {
+  if (typeof node === 'string') return node
+  if (typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(extractText).join('')
+  if (node && typeof node === 'object' && 'props' in node) {
+    const props = node.props as { children?: ReactNode }
+    return extractText(props.children)
+  }
+  return ''
+}
+
+function makeHeading(level: number) {
+  return ({ children, ...rest }: ComponentProps<'h2'> & ExtraProps) => {
+    const text = extractText(children)
+    const id = text ? slugify(text) : undefined
+    const Tag = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4'
+    return <Tag id={id} {...rest}>{children}</Tag>
+  }
+}
+
 const components: Components = {
+  h1: makeHeading(1),
+  h2: makeHeading(2),
+  h3: makeHeading(3),
+  h4: makeHeading(4),
   a: MarkdownLink,
   code: InlineCode,
   pre: MarkdownPre,

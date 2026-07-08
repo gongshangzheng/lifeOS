@@ -7,12 +7,12 @@ export function cn(...inputs: ClassValue[]): string {
 
 // ── TOC extraction ───────────────────────────────────────────
 
-function slugify(text: string): string {
+export function slugify(text: string): string {
   return text
+    .trim()
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^\w一-鿿-]/g, '')
 }
 
 export type TocItem = { level: number; text: string; slug: string }

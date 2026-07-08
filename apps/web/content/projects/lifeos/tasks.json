@@ -333,27 +333,6 @@
           "children": []
         }
       ]
-    },
-    {
-      "id": "r-1",
-      "title": "每日代码提交",
-      "status": "active",
-      "startDate": null,
-      "endDate": null,
-      "description": "",
-      "recurring": {
-        "pattern": "daily",
-        "startTime": "21:00",
-        "endTime": "21:30",
-        "activeFrom": "2026-07-07",
-        "activeUntil": null,
-        "excludeDates": [],
-        "reportLevels": [
-          "daily",
-          "weekly"
-        ]
-      },
-      "children": []
     }
   ]
 }

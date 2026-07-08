@@ -11,6 +11,13 @@ tags:
   - 生成式AI
   - 实时推理
 summary: 阿里巴巴钉钉数字人方向实习生。当前目标为会议面试官数字人，围绕实时数字人、音视频交互与生成式模型落地，参与算法方案调研、工程实现和效果优化。
+participants:
+  - name: 汤问
+    role: 负责人
+  - name: 关木
+    role: 协助者
+  - name: 青谷
+    role: 主管
 timeline:
   - date: 2026-06-01
     title: 入职钉钉
@@ -36,6 +43,10 @@ timeline:
     title: 当前任务梳理
     type: progress
     description: 整理出五大并行任务方向：卡通数字人、数字人产品调研、评测框架优化、模型部署测试、conversation 评测数据集制作。
+  - date: 2026-07-08
+    title: 评测框架 Web UI 搭建
+    type: progress
+    description: 基于 Gradio 搭建评测框架可视化界面（webui.py），包含评测配置、实时日志、结果总览、报告查看和系统信息四个 Tab。
 ---
 
 ## 项目背景
@@ -117,6 +128,14 @@ src/
 
 **数据集适配器**：
 - TalkVid、Conversation、Long、Base
+
+### 3. 评测框架 Web UI（webui.py）
+
+基于 Gradio 构建的可视化界面，封装 CLI 功能，提供：
+- **评测配置**：模型/轨道/数据集选择、执行参数配置、实时日志流式输出
+- **结果总览**：评测结果列表 + 指标详情表格
+- **报告查看**：内嵌 HTML 报告
+- **系统信息**：项目信息、环境变量、轨道详情
 
 ## 当前任务
 

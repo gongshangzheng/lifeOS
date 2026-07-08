@@ -64,7 +64,28 @@ function projectTasksPlugin(): Plugin {
 
 export default defineConfig({
   base: '/lifeOS/',
-  plugins: [react(), tailwindcss(), projectTasksPlugin()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    projectTasksPlugin(),
+    // Dev-only: redirect / to /lifeOS/ so users don't hit the base URL error
+    {
+      name: 'lifeos-dev-redirect',
+      configureServer(server) {
+        server.middlewares.use((req: IncomingMessage, res: ServerResponse, next: () => void) => {
+          const url = req.url ?? ''
+          // Redirect bare / to /lifeOS/ (but not /lifeOS/ itself or assets)
+          if (url === '/' || url === '') {
+            res.statusCode = 302
+            res.setHeader('Location', '/lifeOS/')
+            res.end()
+            return
+          }
+          next()
+        })
+      },
+    },
+  ],
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),

@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { FileText, ChevronRight, FolderOpen, NotebookPen, CalendarRange, Calendar as CalendarIcon, Target, Compass, BookOpen, Library } from 'lucide-react'
+import { FileText, ChevronRight, FolderOpen } from 'lucide-react'
+import { type ComponentType } from 'react'
 import { cn } from '@/lib/utils'
 import { stripMarkdown } from '@/lib/markdown'
 
@@ -15,7 +16,7 @@ export type ReportTab = {
   key: string
   label: string
   path: string
-  icon: React.ComponentType<{ className?: string }>
+  icon: ComponentType<{ className?: string }>
 }
 
 type ReportListProps = {

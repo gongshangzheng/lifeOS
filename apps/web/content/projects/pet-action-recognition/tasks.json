@@ -72,30 +72,44 @@
         {
           "id": "t2-2",
           "title": "任务 2：各动作检测路线深入了解",
-          "status": "planned",
+          "status": "active",
+          "startDate": "2026-07-08",
+          "endDate": null,
           "children": [
             {
               "id": "t2-2-1",
               "title": "RGB 3D-CNN 路线（X3D、SlowFast、CSN）",
-              "status": "planned",
+              "status": "active",
+              "startDate": "2026-07-08",
+              "endDate": null,
+              "description": "深入调研 X3D、SlowFast、CSN 等 3D-CNN 模型在动作识别中的表现，分析其参数量、计算量与端侧适配性",
               "children": []
             },
             {
               "id": "t2-2-2",
               "title": "RGB 2D-CNN 路线（TSM+MobileNetV2）",
-              "status": "planned",
+              "status": "active",
+              "startDate": "2026-07-08",
+              "endDate": null,
+              "description": "深入调研 TSM+MobileNetV2 等 2D-CNN 路线，评估其在端侧的低计算开销优势与精度天花板",
               "children": []
             },
             {
               "id": "t2-2-3",
               "title": "骨架路线（SuperAnimal + STGCN++）",
-              "status": "planned",
+              "status": "active",
+              "startDate": "2026-07-08",
+              "endDate": null,
+              "description": "深入调研 SuperAnimal 零样本姿态估计 + STGCN++ 骨架动作识别路线，评估猫科姿态估计精度对下游动作识别的影响",
               "children": []
             },
             {
               "id": "t2-2-4",
               "title": "异常检测路线（VideoMAE 重建误差）",
-              "status": "planned",
+              "status": "active",
+              "startDate": "2026-07-08",
+              "endDate": null,
+              "description": "深入调研 VideoMAE 重建误差异常检测路线，分析呕吐/抽搐等无公开数据场景的解决方案",
               "children": []
             }
           ]
@@ -124,6 +138,20 @@
               "children": []
             }
           ]
+        },
+        {
+          "id": "t2-4",
+          "title": "与吴赟阳对齐项目进度",
+          "status": "active",
+          "startDate": "2026-07-08",
+          "endDate": null,
+          "startTime": "20:00",
+          "endTime": "21:00",
+          "location": "线上",
+          "category": "social",
+          "description": "与吴赟阳同步宠物动作识别项目各路线调研进展，讨论下一步重点方向",
+          "assignee": "吴赟阳",
+          "children": []
         }
       ]
     }

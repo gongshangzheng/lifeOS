@@ -115,11 +115,12 @@
 
   /* ---------- Events ----------------------------------------- */
   .lo-calendar .fc-event,
-  .lo-calendar .fc-event-main {
-    @apply rounded-md border border-primary/40 bg-primary-subtle shadow-none;
+  .lo-calendar .fc-event-main,
+  .lo-calendar .fc-event-main-frame {
+    @apply rounded-md border-0 bg-transparent p-0 shadow-none;
   }
   .lo-calendar .fc-event:hover {
-    @apply bg-primary/30;
+    @apply bg-transparent;
   }
   .lo-calendar .fc-event-title {
     @apply text-xs font-medium;

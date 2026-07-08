@@ -1,18 +1,11 @@
-import { Routes, Route, NavLink, Outlet, Navigate, Link, useLocation } from 'react-router-dom'
+import { Routes, Route, NavLink, Outlet, Navigate, Link } from 'react-router-dom'
 import { useState, lazy, Suspense } from 'react'
 import {
   CalendarDays,
-  NotebookPen,
-  CalendarRange,
-  Calendar as CalendarIcon,
-  Target,
-  Compass,
-  BookOpen,
-  Library,
   FolderKanban,
   Activity,
-  Sparkles,
   FileText,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -39,20 +32,18 @@ const VisionList = lazy(() => rp().then((m) => ({ default: m.VisionList })))
 const VisionDetail = lazy(() => rp().then((m) => ({ default: m.VisionDetail })))
 const AppendixList = lazy(() => rp().then((m) => ({ default: m.AppendixList })))
 const AppendixDetail = lazy(() => rp().then((m) => ({ default: m.AppendixDetail })))
-
-const REPORT_PATHS = ['/report']
+const FirstTimesPage = lazy(() => import('@/pages/FirstTimes').then((m) => ({ default: m.FirstTimesPage })))
 
 const NAV: ReadonlyArray<{ to: string; label: string; icon: typeof CalendarDays }> = [
   { to: '/calendar', label: '日历', icon: CalendarDays },
-  { to: '/habits', label: '习惯', icon: Activity },
-  { to: '/report', label: '报告', icon: FileText },
   { to: '/projects', label: '项目', icon: FolderKanban },
+  { to: '/report', label: '报告', icon: FileText },
+  { to: '/habits', label: '习惯', icon: Activity },
+  { to: '/first-times', label: '初体验', icon: Sparkles },
 ]
 
 function NavBar() {
   const [searchOpen, setSearchOpen] = useState(false)
-  const { pathname } = useLocation()
-  const reportActive = REPORT_PATHS.some((p) => pathname.startsWith(p))
   return (
     <>
       <header className="lo-nav">
@@ -81,18 +72,6 @@ function NavBar() {
                 {label}
               </NavLink>
             ))}
-            <Link
-              to="/daily"
-              className={cn(
-                'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
-                reportActive
-                  ? 'bg-primary-subtle text-primary-subtle-foreground'
-                  : 'text-dim hover:bg-muted hover:text-heading',
-              )}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              Reports
-            </Link>
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <SearchButton onClick={() => setSearchOpen(true)} />
@@ -149,7 +128,8 @@ export default function App() {
         <Route path="report/vision/:slug" element={<VisionDetail />} />
         <Route path="report/appendix" element={<AppendixList />} />
         <Route path="report/appendix/:slug" element={<AppendixDetail />} />
-        <Route path="report/first-times" element={<AppendixList />} />
+
+        <Route path="first-times" element={<FirstTimesPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

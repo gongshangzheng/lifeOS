@@ -32,6 +32,12 @@ const timelineEventSchema = s.object({
   description: s.string().optional(),
 })
 
+const participantSchema = s.object({
+  name: s.string(),
+  role: s.string(),
+  description: s.string().optional(),
+})
+
 const projectSchema = s
   .object({
     title: s.string().optional(),
@@ -42,6 +48,7 @@ const projectSchema = s
     category: s.string().default('work'),
     tags: s.array(s.string()).default([]),
     summary: s.string().optional(),
+    participants: s.array(participantSchema).default([]),
     timeline: s.array(timelineEventSchema).default([]),
     metadata: s.record(s.string(), s.unknown()).default({}),
     body: s.raw(),

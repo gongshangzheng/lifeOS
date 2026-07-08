@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ChevronDown,
   User,
+  Users,
   FileText,
   ArrowLeft,
   Clock,
@@ -430,6 +431,24 @@ function ProjectReadme({ project }: { project: Projects }) {
           </div>
         )}
       </div>
+
+      {/* Participants */}
+      {project.participants && project.participants.length > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <Users className="h-3.5 w-3.5 flex-shrink-0 text-dim" />
+          {project.participants.map((p, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/50 px-2.5 py-1 text-[11px]"
+            >
+              <span className="font-medium text-body">{p.name}</span>
+              <span className="rounded-full bg-primary/10 px-1.5 py-px text-[9px] font-medium text-primary-subtle-foreground">
+                {p.role}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Markdown body */}
       {project.body ? (

@@ -1,8 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { NotebookPen, CalendarRange, Calendar as CalendarIcon, Target, Compass, BookOpen, Library } from 'lucide-react'
-import { ReportList, type ReportListItem, type ReportTab } from '@/components/ReportList'
-import { ReportDetail, type ReportDetailItem } from '@/components/ReportDetail'
-import { RelatedReports } from '@/components/RelatedReports'
+import { ReportLayout, type ReportTab } from '@/components/ReportLayout'
 import {
   getAllDaily,
   getDailyBySlug,
@@ -25,7 +23,8 @@ type CollectionConfig<Slug extends string = string> = {
   description: string
   basePath: string
   empty: string
-  groupByCategory?: boolean
+  showEventsForDate?: boolean
+  showFirstTimesForDate?: boolean
   listLoader: () => ReadonlyArray<{ slug: Slug; title: string; date?: string; summary?: string; category?: string }>
   detailLoader: (slug: string) =>
     | { title: string; slug: Slug; date?: string; summary?: string; body: string }
@@ -38,6 +37,8 @@ const COLLECTIONS = {
     description: '每日复盘 — 任务、进展、思考。',
     basePath: '/report/daily',
     empty: '还没有日报。',
+    showEventsForDate: true,
+    showFirstTimesForDate: true,
     listLoader: getAllDaily,
     detailLoader: getDailyBySlug,
   },
@@ -86,7 +87,6 @@ const COLLECTIONS = {
     description: '职业规划、公司调研、生活随笔与收藏清单。',
     basePath: '/report/appendix',
     empty: '还没有文章。',
-    groupByCategory: true,
     listLoader: getAllAppendix,
     detailLoader: getAppendixBySlug,
   },
@@ -105,32 +105,24 @@ const REPORT_TABS: ReportTab[] = [
   { key: 'appendix', label: '附录', path: '/report/appendix', icon: Library },
 ]
 
-function makeListPage(key: CollectionKey) {
+function makeReportPage(key: CollectionKey) {
   const cfg: CollectionConfig = COLLECTIONS[key]
-  return function ListPage() {
-    const items: ReportListItem[] = cfg
+  return function ReportPage() {
+    const { slug = '' } = useParams<{ slug: string }>()
+    const items = cfg
       .listLoader()
       .map((it) => ({ slug: it.slug, title: it.title, date: it.date, summary: it.summary, category: it.category }))
-    return (
-      <ReportList
-        title={cfg.label}
-        description={cfg.description}
-        items={items}
-        basePath={cfg.basePath}
-        emptyText={cfg.empty}
-        groupByCategory={cfg.groupByCategory}
-        tabs={REPORT_TABS}
-      />
-    )
-  }
-}
 
-function makeDetailPage(key: CollectionKey) {
-  const cfg = COLLECTIONS[key]
-  return function DetailPage() {
-    const { slug = '' } = useParams<{ slug: string }>()
-    const raw = cfg.detailLoader(slug)
-    const item: ReportDetailItem | undefined = raw
+    const raw = slug ? cfg.detailLoader(slug) : undefined
+
+    // Debug logging
+    if (slug) {
+      console.log(`[${key}] Looking up slug:`, slug)
+      console.log(`[${key}] Found item:`, !!raw)
+      console.log(`[${key}] Available slugs:`, items.slice(0, 5).map(i => i.slug))
+    }
+
+    const detail = raw
       ? {
           title: raw.title,
           slug: raw.slug,
@@ -139,36 +131,37 @@ function makeDetailPage(key: CollectionKey) {
           body: raw.body,
         }
       : undefined
-    const eventsDate = key === 'daily' && item?.date ? item.date.slice(0, 10) : undefined
+
     return (
-      <>
-        {item?.date && (
-          <RelatedReports type={key} slug={item.slug} date={item.date} />
-        )}
-        <ReportDetail
-          item={item}
-          backTo={cfg.basePath}
-          backLabel={`${cfg.label} 列表`}
-          notFoundTitle={`未找到 ${cfg.label}`}
-          showEventsForDate={eventsDate}
-          showFirstTimesForDate={eventsDate}
-        />
-      </>
+      <ReportLayout
+        type={key}
+        label={cfg.label}
+        description={cfg.description}
+        basePath={cfg.basePath}
+        empty={cfg.empty}
+        tabs={REPORT_TABS}
+        items={items}
+        detail={detail}
+        showEventsForDate={cfg.showEventsForDate}
+        showFirstTimesForDate={cfg.showFirstTimesForDate}
+        relatedType={key}
+      />
     )
   }
 }
 
-export const DailyList = makeListPage('daily')
-export const DailyDetail = makeDetailPage('daily')
-export const WeeklyList = makeListPage('weekly')
-export const WeeklyDetail = makeDetailPage('weekly')
-export const MonthlyList = makeListPage('monthly')
-export const MonthlyDetail = makeDetailPage('monthly')
-export const QuarterlyList = makeListPage('quarterly')
-export const QuarterlyDetail = makeDetailPage('quarterly')
-export const AnnualList = makeListPage('annual')
-export const AnnualDetail = makeDetailPage('annual')
-export const VisionList = makeListPage('vision')
-export const VisionDetail = makeDetailPage('vision')
-export const AppendixList = makeListPage('appendix')
-export const AppendixDetail = makeDetailPage('appendix')
+export const DailyList = makeReportPage('daily')
+export const DailyDetail = makeReportPage('daily')
+export const WeeklyList = makeReportPage('weekly')
+export const WeeklyDetail = makeReportPage('weekly')
+export const MonthlyList = makeReportPage('monthly')
+export const MonthlyDetail = makeReportPage('monthly')
+export const QuarterlyList = makeReportPage('quarterly')
+export const QuarterlyDetail = makeReportPage('quarterly')
+export const AnnualList = makeReportPage('annual')
+export const AnnualDetail = makeReportPage('annual')
+export const VisionList = makeReportPage('vision')
+export const VisionDetail = makeReportPage('vision')
+export const AppendixList = makeReportPage('appendix')
+export const AppendixDetail = makeReportPage('appendix')
+

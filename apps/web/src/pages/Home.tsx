@@ -122,7 +122,7 @@ function QuickNavCard({
 // ── Contribution Heatmap ──────────────────────────────────────
 
 function ContributionHeatmap() {
-  const { weeks, months, streakDays } = useMemo(() => {
+  const { weeks, streakDays } = useMemo(() => {
     const dailies = getAllDaily()
     const dateSet = new Set(dailies.map((d) => d.date?.slice(0, 10)))
 
@@ -151,17 +151,6 @@ function ContributionHeatmap() {
       wks.push(allDays.slice(i, i + 7))
     }
 
-    // Month labels (first week of each month)
-    const mos: Array<{ label: string; col: number }> = []
-    let lastMonth = ''
-    wks.forEach((week, col) => {
-      const m = week[0]?.date?.slice(0, 7) ?? ''
-      if (m && m !== lastMonth) {
-        mos.push({ label: m.slice(5), col })
-        lastMonth = m
-      }
-    })
-
     // Current streak
     let streak = 0
     const td = new Date(today)
@@ -170,7 +159,7 @@ function ContributionHeatmap() {
       td.setDate(td.getDate() - 1)
     }
 
-    return { weeks: wks, months: mos, totalCount: dailies.length, streakDays: streak }
+    return { weeks: wks, streakDays: streak }
   }, [])
 
   const DAY_LABELS = ['', '一', '', '三', '', '五', '']
@@ -184,18 +173,19 @@ function ContributionHeatmap() {
           <Link to="/daily" className="hover:text-primary">查看全部 →</Link>
         </div>
       </div>
-      <div className="mt-3 overflow-x-auto">
+      <div className="mt-3">
         {/* Month labels */}
         <div className="flex gap-1 pb-1 pl-6">
-          {months.map((m, i) => (
-            <span
-              key={i}
-              className="text-[9px] text-placeholder"
-              style={{ position: 'relative', left: `${m.col * 14}px` }}
-            >
-              {m.label}月
-            </span>
-          ))}
+          {weeks.map((week, wi) => {
+            const m = week[0]?.date?.slice(0, 7) ?? ''
+            const prevM = wi > 0 ? (weeks[wi - 1]?.[0]?.date?.slice(0, 7) ?? '') : ''
+            const showLabel = m !== prevM
+            return (
+              <div key={wi} className="flex-1 text-[9px] text-placeholder">
+                {showLabel ? `${m.slice(5)}月` : ''}
+              </div>
+            )
+          })}
         </div>
         <div className="flex gap-0">
           {/* Day labels */}
@@ -207,16 +197,16 @@ function ContributionHeatmap() {
             ))}
           </div>
           {/* Grid */}
-          <div className="flex gap-1">
+          <div className="flex flex-1 gap-1">
             {weeks.map((week, wi) => (
-              <div key={wi} className="flex flex-col gap-1">
+              <div key={wi} className="flex flex-1 flex-col gap-1">
                 {Array.from({ length: 7 }, (_, di) => {
                   const day = week[di]
-                  if (!day) return <div key={di} className="h-3 w-3" />
+                  if (!day) return <div key={di} className="h-3 w-full" />
                   return (
                     <div
                       key={di}
-                      className={`h-3 w-3 rounded-sm transition-colors ${
+                      className={`h-3 w-full rounded-sm transition-colors ${
                         day.hasReport ? 'bg-green-500' : 'bg-muted'
                       } hover:ring-1 hover:ring-primary`}
                       title={`${day.date}${day.hasReport ? ' ✓' : ''}`}
@@ -248,12 +238,9 @@ function LiveClock() {
     return () => clearInterval(t)
   }, [])
   return (
-    <div className="lo-card p-4">
-      <p className="text-[11px] uppercase tracking-wider text-dim">当前时间</p>
-      <p className="mt-1 font-mono text-2xl font-semibold text-heading">
-        {now.toLocaleString('zh-CN', { hour12: false })}
-      </p>
-    </div>
+    <p className="hidden font-mono text-sm text-dim sm:block">
+      {now.toLocaleString('zh-CN', { hour12: false })}
+    </p>
   )
 }
 
@@ -338,157 +325,147 @@ export function Home() {
 
   return (
     <section className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="lo-section-title">lifeOS Dashboard</h1>
-        <p className="lo-section-desc">个人生活操作系统 — 愿景、计划、进展与反思。</p>
+      <header className="flex items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="lo-section-title">lifeOS Dashboard</h1>
+          <p className="lo-section-desc">个人生活操作系统 — 愿景、计划、进展与反思。</p>
+        </div>
+        <LiveClock />
       </header>
 
-      {/* Time display + Heatmap */}
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-        <LiveClock />
+      {/* Heatmap + Active projects */}
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <ContributionHeatmap />
-      </div>
-
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <StatCard
-          label={`本月日报（${ym}）`}
-          value={stats.monthlyCount}
-          hint={`累计 ${stats.dailyTotal} 篇`}
-        />
-        <ReportCard label="最新日报" report={stats.latestDaily} to={(slug) => `/daily/${slug}`} />
-        <ReportCard label="最新周报" report={stats.latestWeekly} to={(slug) => `/weekly/${slug}`} />
-        <ReportCard label="最新月报" report={stats.latestMonthly} to={(slug) => `/monthly/${slug}`} />
-        <ReportCard label="最新季报" report={stats.latestQuarterly} to={(slug) => `/quarterly/${slug}`} />
-        <ReportCard label="最新年报" report={stats.latestAnnual} to={(slug) => `/annual/${slug}`} />
-      </div>
-
-      {/* Two-column layout: recent reports + quick nav */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        {/* Recent reports */}
-        <div className="space-y-6">
-          {/* Recent dailies */}
-          <div className="lo-card p-4">
+        {activeProjects.length > 0 && (
+          <div className="lo-card h-full p-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-heading">近期日报</h2>
-              <Link to="/daily" className="text-[11px] text-dim transition-colors hover:text-primary">
-                查看全部 →
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-dim">
+                活跃项目
+              </h3>
+              <Link to="/projects" className="text-[10px] text-dim hover:text-primary">
+                →
               </Link>
             </div>
-            {recentDailies.length === 0 ? (
-              <p className="mt-3 text-sm text-dim">还没有日报。</p>
-            ) : (
-              <div className="mt-3 space-y-2">
-                {recentDailies.map((d) => {
-                  const summary = d.summary ? stripMarkdown(d.summary) : ''
-                  return (
-                    <Link
-                      key={d.slug}
-                      to={`/daily/${d.slug}`}
-                      className="group block rounded-md border border-border-subtle bg-background p-3 transition-colors hover:border-border hover:bg-muted"
-                    >
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="truncate text-sm font-medium text-heading group-hover:text-primary-hover">
-                          {d.title}
-                        </span>
-                        <span className="flex-shrink-0 font-mono text-[11px] text-dim">
-                          {d.date?.slice(0, 10)}
+            <div className="mt-3 space-y-3">
+              {activeProjects.map((p) => {
+                const tree = taskTrees[p.slug]
+                const taskStats = tree ? countTasks(tree.tasks) : null
+                return (
+                  <Link
+                    key={p.slug}
+                    to="/projects"
+                    className="group block"
+                  >
+                    <div className="text-sm font-medium text-body group-hover:text-primary-hover">
+                      {p.title}
+                    </div>
+                    {taskStats && taskStats.total > 0 && (
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-green-500 transition-all"
+                            style={{ width: `${(taskStats.completed / taskStats.total) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-placeholder">
+                          {taskStats.completed}/{taskStats.total}
                         </span>
                       </div>
-                      {summary && (
-                        <p className="mt-1 line-clamp-1 text-xs text-body">{summary}</p>
-                      )}
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Recent weeklies */}
-          <div className="lo-card p-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-heading">近期周报</h2>
-              <Link to="/weekly" className="text-[11px] text-dim transition-colors hover:text-primary">
-                查看全部 →
-              </Link>
+                    )}
+                  </Link>
+                )
+              })}
             </div>
-            {recentWeeklies.length === 0 ? (
-              <p className="mt-3 text-sm text-dim">还没有周报。</p>
-            ) : (
-              <div className="mt-3 space-y-2">
-                {recentWeeklies.map((w) => {
-                  const summary = w.summary ? stripMarkdown(w.summary) : ''
-                  return (
-                    <Link
-                      key={w.slug}
-                      to={`/weekly/${w.slug}`}
-                      className="group block rounded-md border border-border-subtle bg-background p-3 transition-colors hover:border-border hover:bg-muted"
-                    >
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="truncate text-sm font-medium text-heading group-hover:text-primary-hover">
-                          {w.title}
-                        </span>
-                        <span className="flex-shrink-0 font-mono text-[11px] text-dim">
-                          {w.date?.slice(0, 10)}
-                        </span>
-                      </div>
-                      {summary && (
-                        <p className="mt-1 line-clamp-1 text-xs text-body">{summary}</p>
-                      )}
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
           </div>
+        )}
+      </div>
+
+      {/* Current period + Stats */}
+      <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+        <QuickNavCard title="当前周期" links={quickLinks} />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <ReportCard label="最新日报" report={stats.latestDaily} to={(slug) => `/daily/${slug}`} />
+          <ReportCard label="最新周报" report={stats.latestWeekly} to={(slug) => `/weekly/${slug}`} />
+          <ReportCard label="最新月报" report={stats.latestMonthly} to={(slug) => `/monthly/${slug}`} />
+          <ReportCard label="最新季报" report={stats.latestQuarterly} to={(slug) => `/quarterly/${slug}`} />
+          <ReportCard label="最新年报" report={stats.latestAnnual} to={(slug) => `/annual/${slug}`} />
+        </div>
+      </div>
+
+      {/* Recent reports - two equal columns */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent dailies */}
+        <div className="lo-card p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-heading">近期日报</h2>
+            <Link to="/daily" className="text-[11px] text-dim transition-colors hover:text-primary">
+              查看全部 →
+            </Link>
+          </div>
+          {recentDailies.length === 0 ? (
+            <p className="mt-3 text-sm text-dim">还没有日报。</p>
+          ) : (
+            <div className="mt-3 space-y-2">
+              {recentDailies.map((d) => {
+                const summary = d.summary ? stripMarkdown(d.summary) : ''
+                return (
+                  <Link
+                    key={d.slug}
+                    to={`/daily/${d.slug}`}
+                    className="group block rounded-md border border-border-subtle bg-background p-3 transition-colors hover:border-border hover:bg-muted"
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-sm font-medium text-heading group-hover:text-primary-hover">
+                        {d.title}
+                      </span>
+                      <span className="flex-shrink-0 font-mono text-[11px] text-dim">
+                        {d.date?.slice(0, 10)}
+                      </span>
+                    </div>
+                    {summary && (
+                      <p className="mt-1 line-clamp-1 text-xs text-body">{summary}</p>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Quick nav sidebar */}
-        <div className="space-y-4">
-          <QuickNavCard title="当前周期" links={quickLinks} />
-
-          {/* Active projects */}
-          {activeProjects.length > 0 && (
-            <div className="lo-card p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-dim">
-                  活跃项目
-                </h3>
-                <Link to="/projects" className="text-[10px] text-dim hover:text-primary">
-                  →
-                </Link>
-              </div>
-              <div className="mt-3 space-y-3">
-                {activeProjects.map((p) => {
-                  const tree = taskTrees[p.slug]
-                  const taskStats = tree ? countTasks(tree.tasks) : null
-                  return (
-                    <Link
-                      key={p.slug}
-                      to="/projects"
-                      className="group block"
-                    >
-                      <div className="text-sm font-medium text-body group-hover:text-primary-hover">
-                        {p.title}
-                      </div>
-                      {taskStats && taskStats.total > 0 && (
-                        <div className="mt-1.5 flex items-center gap-2">
-                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                            <div
-                              className="h-full rounded-full bg-green-500 transition-all"
-                              style={{ width: `${(taskStats.completed / taskStats.total) * 100}%` }}
-                            />
-                          </div>
-                          <span className="text-[10px] text-placeholder">
-                            {taskStats.completed}/{taskStats.total}
-                          </span>
-                        </div>
-                      )}
-                    </Link>
-                  )
-                })}
-              </div>
+        {/* Recent weeklies */}
+        <div className="lo-card p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-heading">近期周报</h2>
+            <Link to="/weekly" className="text-[11px] text-dim transition-colors hover:text-primary">
+              查看全部 →
+            </Link>
+          </div>
+          {recentWeeklies.length === 0 ? (
+            <p className="mt-3 text-sm text-dim">还没有周报。</p>
+          ) : (
+            <div className="mt-3 space-y-2">
+              {recentWeeklies.map((w) => {
+                const summary = w.summary ? stripMarkdown(w.summary) : ''
+                return (
+                  <Link
+                    key={w.slug}
+                    to={`/weekly/${w.slug}`}
+                    className="group block rounded-md border border-border-subtle bg-background p-3 transition-colors hover:border-border hover:bg-muted"
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-sm font-medium text-heading group-hover:text-primary-hover">
+                        {w.title}
+                      </span>
+                      <span className="flex-shrink-0 font-mono text-[11px] text-dim">
+                        {w.date?.slice(0, 10)}
+                      </span>
+                    </div>
+                    {summary && (
+                      <p className="mt-1 line-clamp-1 text-xs text-body">{summary}</p>
+                    )}
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>
