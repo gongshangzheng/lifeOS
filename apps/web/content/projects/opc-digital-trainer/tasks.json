@@ -1,0 +1,32 @@
+{
+  "project": "opc-digital-trainer",
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "项目启动与规划",
+      "status": "active",
+      "startDate": "2026-07-10",
+      "endDate": null,
+      "description": "项目启动阶段，明确方向、制作讲解视频",
+      "children": [
+        {
+          "id": "t1-1",
+          "title": "制作项目讲解视频",
+          "status": "active",
+          "startDate": "2026-07-10",
+          "endDate": null,
+          "startTime": null,
+          "endTime": null,
+          "location": null,
+          "category": "work",
+          "description": "制作 OPC 数字人私教项目的讲解视频，介绍项目背景、目标与规划",
+          "assignee": "汤问",
+          "children": [
+            { "id": "t1-1-1", "title": "撰写讲解脚本", "status": "planned", "startDate": "2026-07-10", "endDate": null, "description": "编写讲解视频的脚本内容", "children": [] },
+            { "id": "t1-1-2", "title": "录制讲解视频", "status": "planned", "startDate": "2026-07-10", "endDate": null, "description": "完成讲解视频的录制", "children": [] }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -24,8 +24,37 @@
         { "id": "t2-1", "title": "dingtalk-digital-human", "status": "active", "startDate": null, "endDate": null, "description": "钉钉数字人 → /projects#dingtalk-digital-human", "children": [] },
         { "id": "t2-2", "title": "infrared-contour-compression", "status": "active", "startDate": null, "endDate": null, "description": "红外轮廓压缩 → /projects#infrared-contour-compression", "children": [] },
         { "id": "t2-3", "title": "pet-action-recognition", "status": "active", "startDate": null, "endDate": null, "description": "宠物动作识别 → /projects#pet-action-recognition", "children": [] },
+        { "id": "t2-3b", "title": "opc-digital-trainer", "status": "active", "startDate": null, "endDate": null, "description": "OPC 数字人私教 → /projects#opc-digital-trainer", "children": [] },
         { "id": "t2-4", "title": "internwiki", "status": "active", "startDate": null, "endDate": null, "description": "实习文档平台 → /projects#internwiki", "children": [] },
         { "id": "t2-5", "title": "internship-projects", "status": "active", "startDate": null, "endDate": null, "description": "实习与项目 → /projects#internship-projects", "children": [] }
+      ]
+    },
+    {
+      "id": "t3",
+      "title": "生活事务",
+      "status": "active",
+      "startDate": null,
+      "endDate": null,
+      "description": "日常生活事务处理",
+      "children": [
+        {
+          "id": "t3-1",
+          "title": "退宿并定曲江房间",
+          "status": "active",
+          "startDate": "2026-07-10",
+          "endDate": null,
+          "startTime": null,
+          "endTime": null,
+          "location": null,
+          "category": "life",
+          "description": "办理退宿手续，将退宿单发给李昱辰，请李昱辰帮忙在曲江预订房间",
+          "assignee": "李昱辰",
+          "children": [
+            { "id": "t3-1-1", "title": "办理退宿手续", "status": "active", "startDate": "2026-07-10", "endDate": null, "description": "完成退宿手续办理，拿到退宿单", "children": [] },
+            { "id": "t3-1-2", "title": "发退宿单给李昱辰", "status": "planned", "startDate": "2026-07-10", "endDate": null, "description": "将退宿单发送给李昱辰", "assignee": "李昱辰", "children": [] },
+            { "id": "t3-1-3", "title": "李昱辰帮忙定曲江房间", "status": "planned", "startDate": "2026-07-10", "endDate": null, "description": "请李昱辰协助在曲江预订房间", "assignee": "李昱辰", "children": [] }
+          ]
+        }
       ]
     }
   ]

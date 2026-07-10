@@ -26,5 +26,10 @@ timeline: []
 - [dingtalk-digital-human](#dingtalk-digital-human) — 钉钉数字人
 - [infrared-contour-compression](#infrared-contour-compression) — 红外轮廓压缩
 - [pet-action-recognition](#pet-action-recognition) — 宠物动作识别
+- [opc-digital-trainer](#opc-digital-trainer) — OPC 数字人私教
 - [internwiki](#internwiki) — 实习文档平台
 - [internship-projects](#internship-projects) — 实习与项目
+
+### 生活事务
+
+- 退宿并定曲江房间（2026-07-10）
