@@ -15,7 +15,7 @@
 //   node scripts/plans.mjs task-add --project slug --parent id --title "..." [--status active]
 // ============================================================
 
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync } from 'node:fs'
 import { resolve, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -599,8 +599,100 @@ function cmdTaskUpdate(args) {
 }
 
 function cmdTaskAdd(args) {
-  if (!args.project || !args.parent || !args.title) {
-    console.error('错误: --project, --parent, --title 都是必填项')
+  if (!args.project || !args.title) {
+    console.error('错误: --project 和 --title 是必填项')
+    console.error('用法:')
+    console.error('  顶层任务: node scripts/plans.mjs task-add --project slug --title "..."')
+    console.error('  子任务:   node scripts/plans.mjs task-add --project slug --parent id --title "..."')
+    process.exit(1)
+  }
+
+  // Read raw tree (without cascade) so we can manipulate the actual data
+  const filePath = join(DIRS.projects, args.project, 'tasks.json')
+  if (!existsSync(filePath)) {
+    console.error(`找不到 ${args.project} 的任务树文件`)
+    process.exit(1)
+  }
+  const tree = JSON.parse(readFileSync(filePath, 'utf-8'))
+
+  let newId
+  let parentTitle = '(顶层)'
+
+  if (args.parent) {
+    const parent = findTaskById(tree.tasks, args.parent)
+    if (!parent) {
+      console.error(`找不到父任务 ID: ${args.parent}`)
+      process.exit(1)
+    }
+    if (!parent.children) parent.children = []
+    newId = `${args.parent}-${parent.children.length + 1}`
+    parentTitle = parent.title
+    parent.children.push(newTaskObj(newId, args))
+  } else {
+    // Top-level task: generate ID from existing top-level count
+    const prefix = args['id-prefix'] || 't'
+    const existingNums = tree.tasks
+      .filter(t => t.id && t.id.startsWith(prefix + '-') )
+      .map(t => parseInt(t.id.split('-')[1], 10))
+      .filter(n => !isNaN(n))
+    const maxNum = existingNums.length > 0 ? Math.max(...existingNums) : tree.tasks.length
+    newId = `${prefix}-${maxNum + 1}`
+    tree.tasks.push(newTaskObj(newId, args))
+  }
+
+  writeFileSync(filePath, JSON.stringify(tree, null, 2) + '\n', 'utf-8')
+  console.log(`✅ 已添加任务: ${args.title} (ID: ${newId})  → 父任务: ${parentTitle}`)
+}
+
+function newTaskObj(id, args) {
+  const obj = {
+    id,
+    title: args.title,
+    status: args.status || 'planned',
+    startDate: args['start-date'] || null,
+    endDate: args['end-date'] || null,
+    description: args.description || '',
+    children: [],
+  }
+  // Optional scheduling fields
+  if (args['start-time']) obj.startTime = args['start-time']
+  if (args['end-time']) obj.endTime = args['end-time']
+  if (args.location) obj.location = args.location
+  if (args.category) obj.category = args.category
+  return obj
+}
+
+// ── Task edit / delete ────────────────────────────────────────
+
+/** Find the parent array that contains a given task id */
+function findTaskParent(tasks, taskId, parent = null) {
+  for (let i = 0; i < tasks.length; i++) {
+    if (tasks[i].id === taskId) return { array: tasks, index: i, parent }
+    if (tasks[i].children && tasks[i].children.length > 0) {
+      const result = findTaskParent(tasks[i].children, taskId, tasks[i])
+      if (result) return result
+    }
+  }
+  return null
+}
+
+const EDITABLE_FIELDS = {
+  'title':       'title',
+  'status':      'status',
+  'start-date':  'startDate',
+  'end-date':    'endDate',
+  'start-time':  'startTime',
+  'end-time':    'endTime',
+  'location':    'location',
+  'category':    'category',
+  'description': 'description',
+}
+
+function cmdTaskEdit(args) {
+  if (!args.project || !args['task-id']) {
+    console.error('错误: --project 和 --task-id 是必填项')
+    console.error('可编辑字段: --title, --status, --start-date, --end-date, --start-time, --end-time, --location, --category, --description')
+    console.error('用法: node scripts/plans.mjs task-edit --project slug --task-id t1-1 --title "新标题" --status completed')
     process.exit(1)
   }
 
@@ -610,26 +702,134 @@ function cmdTaskAdd(args) {
     process.exit(1)
   }
 
-  const parent = findTaskInTree(tree.tasks, args.parent)
-  if (!parent) {
-    console.error(`找不到父任务 ID: ${args.parent}`)
+  const task = findTaskInTree(tree.tasks, args['task-id'])
+  if (!task) {
+    console.error(`找不到任务 ID: ${args['task-id']}`)
     process.exit(1)
   }
 
-  const newId = `${args.parent}-${parent.children.length + 1}`
-  const newTask = {
-    id: newId,
-    title: args.title,
-    status: args.status || 'planned',
-    startDate: args['start-date'] || null,
-    endDate: args['end-date'] || null,
-    description: args.description || '',
-    children: [],
+  const changes = []
+  for (const [cliKey, fieldKey] of Object.entries(EDITABLE_FIELDS)) {
+    if (args[cliKey] !== undefined) {
+      const oldVal = task[fieldKey]
+      // Treat 'null' string as actual null for date fields
+      let newVal = args[cliKey]
+      if (newVal === 'null') newVal = null
+      task[fieldKey] = newVal
+      const oldStr = oldVal === null ? '∅' : String(oldVal)
+      const newStr = newVal === null ? '∅' : String(newVal)
+      if (oldStr !== newStr) {
+        changes.push(`  ${fieldKey}: ${oldStr} → ${newStr}`)
+      }
+    }
   }
 
-  parent.children.push(newTask)
+  if (changes.length === 0) {
+    console.log('没有提供要修改的字段。可编辑字段:')
+    console.log('  --title, --status, --start-date, --end-date, --start-time, --end-time, --location, --category, --description')
+    return
+  }
+
   saveTaskTree(args.project, tree)
-  console.log(`✅ 已添加任务: ${newTask.title} (ID: ${newId})  → 父任务: ${parent.title}`)
+  console.log(`✅ 已编辑任务: ${task.title} (ID: ${args['task-id']})`)
+  for (const c of changes) console.log(c)
+}
+
+function cmdTaskDelete(args) {
+  if (!args.project || !args['task-id']) {
+    console.error('错误: --project 和 --task-id 是必填项')
+    console.error('用法: node scripts/plans.mjs task-delete --project slug --task-id t1-1')
+    process.exit(1)
+  }
+
+  const tree = loadTaskTree(args.project)
+  if (!tree) {
+    console.error(`找不到 ${args.project} 的任务树`)
+    process.exit(1)
+  }
+
+  const result = findTaskParent(tree.tasks, args['task-id'])
+  if (!result) {
+    console.error(`找不到任务 ID: ${args['task-id']}`)
+    process.exit(1)
+  }
+
+  const task = result.array[result.index]
+  const childCount = task.children ? task.children.length : 0
+
+  // Confirm if task has children
+  if (childCount > 0 && !args.force) {
+    console.error(`⚠️  任务 "${task.title}" 有 ${childCount} 个子任务，删除会一并移除它们。`)
+    console.error('    如确认要删除，请加 --force 参数')
+    process.exit(1)
+  }
+
+  result.array.splice(result.index, 1)
+  saveTaskTree(args.project, tree)
+  console.log(`🗑️  已删除: ${task.title} (ID: ${args['task-id']})`)
+  if (childCount > 0) console.log(`    同时删除了 ${childCount} 个子任务`)
+}
+
+// ── Project creation ───────────────────────────────────────────
+
+function cmdProjectCreate(args) {
+  if (!args.slug || !args.title) {
+    console.error('错误: --slug 和 --title 是必填项')
+    console.error('用法: node scripts/plans.mjs project-create --slug my-project --title "项目名" [--category work] [--summary "..."]')
+    process.exit(1)
+  }
+
+  const projectDir = join(DIRS.projects, args.slug)
+  if (existsSync(projectDir)) {
+    console.error(`错误: 项目目录已存在: ${projectDir}`)
+    process.exit(1)
+  }
+
+  // Create directory
+  mkdirSync(projectDir, { recursive: true })
+
+  const category = args.category || 'work'
+  const summary = args.summary || ''
+  const status = args.status || 'active'
+  const startDate = args['start-date'] || today()
+  const tags = args.tags ? args.tags.split(',').map(t => t.trim()) : []
+
+  // Generate README.md
+  const readmeContent = `---
+title: ${args.title}
+slug: ${args.slug}
+status: ${status}
+startDate: ${startDate}
+endDate: null
+category: ${category}
+${tags.length > 0 ? `tags:
+${tags.map(t => `  - ${t}`).join('\n')}` : `tags: []`}
+summary: ${summary}
+timeline:
+  - date: ${startDate}
+    title: 项目创建
+    type: milestone
+    description: ${summary || '项目创建'}
+---
+
+# ${args.title}
+
+${summary}
+`
+  writeFileSync(join(projectDir, 'README.md'), readmeContent, 'utf-8')
+
+  // Generate tasks.json skeleton
+  const tasksContent = {
+    project: args.slug,
+    tasks: [],
+  }
+  writeFileSync(join(projectDir, 'tasks.json'), JSON.stringify(tasksContent, null, 2) + '\n', 'utf-8')
+
+  console.log(`✅ 已创建项目: ${args.title}`)
+  console.log(`   目录: ${projectDir}`)
+  console.log(`   slug: ${args.slug}`)
+  console.log(`   类别: ${category}  状态: ${status}  起始: ${startDate}`)
+  console.log(`   下一步: 用 task-add --project ${args.slug} --parent "" 添加顶层任务（或直接编辑 tasks.json）`)
 }
 
 // ── Recurring task management ─────────────────────────────────
@@ -843,6 +1043,15 @@ switch (command) {
   case 'task-add':
     cmdTaskAdd(args)
     break
+  case 'task-edit':
+    cmdTaskEdit(args)
+    break
+  case 'task-delete':
+    cmdTaskDelete(args)
+    break
+  case 'project-create':
+    cmdProjectCreate(args)
+    break
   case 'recurring-add':
     cmdRecurringAdd(args)
     break
@@ -857,30 +1066,37 @@ lifeOS Plans CLI — 快速列出项目与各级计划
   node scripts/plans.mjs <command> [options]
 
 命令:
-  projects      列出项目             [--status active|completed|paused|planned]
-  daily         查看日报             [--date YYYY-MM-DD]  (默认今天)
-  weekly        查看周报             [--date YYYY-MM-DD | --week YYYY-WNN]  (默认本周)
-  monthly       查看月报             [--date YYYY-MM]  (默认本月)
-  quarterly     查看季报             [--date YYYY-QN]  (默认本季)
-  annual        查看年报             [--year YYYY]  (默认今年)
-  overview      综合概览             一览项目/日/周/月待办
-  tasks         列出任务树           [--project slug]
-  task-update   更新任务状态         --project slug --task-id id --status completed
-  task-add      添加子任务           --project slug --parent id --title "..." [--status active]
-  recurring-add 添加周期任务         --project slug --title "..." --pattern daily|weekly|every-N-days --report-levels daily,weekly [--every N] [--start HH:MM] [--end HH:MM] [--from YYYY-MM-DD] [--until YYYY-MM-DD] [--parent id]
-  recurring-list 列出周期任务         [--project slug]
+  projects        列出项目             [--status active|completed|paused|planned]
+  project-create  创建新项目           --slug my-project --title "项目名" [--category work] [--summary "..."] [--status active]
+  daily           查看日报             [--date YYYY-MM-DD]  (默认今天)
+  weekly          查看周报             [--date YYYY-MM-DD | --week YYYY-WNN]  (默认本周)
+  monthly         查看月报             [--date YYYY-MM]  (默认本月)
+  quarterly       查看季报             [--date YYYY-QN]  (默认本季)
+  annual          查看年报             [--year YYYY]  (默认今年)
+  overview        综合概览             一览项目/日/周/月待办
+  tasks           列出任务树           [--project slug]
+  task-add        添加任务             --project slug --title "..." [--parent id] [--status active] [--start-date ...] [--end-date ...] [--description ...]
+  task-update     更新任务状态         --project slug --task-id id --status completed
+  task-edit       编辑任务字段         --project slug --task-id id [--title "..."] [--status ...] [--start-date ...] [--end-date ...] [--description ...] ...
+  task-delete     删除任务             --project slug --task-id id [--force]
+  recurring-add   添加周期任务         --project slug --title "..." --pattern daily|weekly|every-N-days --report-levels daily,weekly [--every N] [--start HH:MM] [--end HH:MM] [--from YYYY-MM-DD] [--until YYYY-MM-DD] [--parent id]
+  recurring-list  列出周期任务         [--project slug]
 
 示例:
   node scripts/plans.mjs overview
   node scripts/plans.mjs projects --status active
+  node scripts/plans.mjs project-create --slug my-project --title "我的项目" --category work --summary "一句话描述"
   node scripts/plans.mjs daily --date 2026-06-30
   node scripts/plans.mjs weekly --week 2026-06-W26
   node scripts/plans.mjs monthly --date 2026-06
   node scripts/plans.mjs quarterly --date 2026-Q2
   node scripts/plans.mjs annual --year 2026
   node scripts/plans.mjs tasks --project dingtalk-digital-human
-  node scripts/plans.mjs task-update --project lifeos --task-id t1-1 --status completed
   node scripts/plans.mjs task-add --project dingtalk-digital-human --parent t3 --title "新任务"
+  node scripts/plans.mjs task-update --project lifeos --task-id t1-1 --status completed
+  node scripts/plans.mjs task-edit --project dingtalk-digital-human --task-id t4-4-1 --status completed --end-date 2026-07-08
+  node scripts/plans.mjs task-delete --project dingtalk-digital-human --task-id t1-1
+  node scripts/plans.mjs task-delete --project dingtalk-digital-human --task-id t1-1 --force
   node scripts/plans.mjs recurring-add --project lifeos --title "每日代码提交" --pattern daily --report-levels daily,weekly
   node scripts/plans.mjs recurring-list
 `)

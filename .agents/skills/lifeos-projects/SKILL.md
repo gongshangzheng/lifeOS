@@ -1,150 +1,200 @@
 ---
 name: lifeos-projects
-description: lifeOS 项目与任务树管理系统。管理 content/projects/ 下的项目文件和独立任务树 JSON。支持 Git 风格的任务树查看、CLI 任务管理、日历集成。当用户提到项目进展、任务树、添加项目事件、更新任务状态时触发。
+description: lifeOS 项目与任务管理。增删改查项目、任务树、状态切换、日期编辑。所有项目/任务操作都通过 plans.mjs CLI 完成，不要手动编辑 JSON。触发词：项目、任务、标记完成、更新状态、添加任务、删除任务、新建项目、项目列表、任务树、task。
 ---
 
-# lifeOS Projects — 项目与任务树管理
+# lifeOS Projects — 项目与任务管理
 
-管理 lifeOS 中的项目。每个项目是一个文件夹，包含所有相关文件：
-1. **项目文件夹** (`content/projects/{slug}/`) — 项目的所有文件都在这个目录下
-2. **README** (`content/projects/{slug}/README.md`) — 项目概览、状态、时间线里程碑
-3. **任务树** (`content/projects/{slug}/tasks.json`) — Git 风格的可展开任务树
-4. **笔记** (`content/projects/{slug}/notes/`) — 任务描述文章（可选，notePath 引用）
+所有项目/任务的增删改查都通过 CLI 脚本 `scripts/plans.mjs` 完成。**不要手动编辑 tasks.json**——用 CLI 命令，它会处理 ID 生成、数据格式和级联逻辑。
 
-## 数据结构
+## 脚本位置
 
-### 项目 Markdown (`content/projects/`)
+```
+scripts/plans.mjs   （相对于 ~/lifeOS）
+```
+
+所有命令前缀：`cd ~/lifeOS && node scripts/plans.mjs <command>`
+
+---
+
+## 命令速查
+
+### 查看
+
+| 命令 | 用途 | 示例 |
+|------|------|------|
+| `projects` | 列出所有项目 | `projects [--status active]` |
+| `tasks` | 查看任务树 | `tasks --project <slug>` |
+| `overview` | 综合概览 | `overview` |
+
+### 任务操作
+
+| 命令 | 用途 | 示例 |
+|------|------|------|
+| `task-add` | 添加任务 | `task-add --project slug --title "任务名" [--parent t1]` |
+| `task-update` | 改状态（快捷） | `task-update --project slug --task-id t1-1 --status completed` |
+| `task-edit` | 改任意字段 | `task-edit --project slug --task-id t1-1 --title "新名" --end-date 2026-07-09` |
+| `task-delete` | 删除任务 | `task-delete --project slug --task-id t1-1 [--force]` |
+
+### 项目操作
+
+| 命令 | 用途 | 示例 |
+|------|------|------|
+| `project-create` | 创建新项目 | `project-create --slug my-project --title "项目名" [--category work]` |
+
+---
+
+## 常用操作流程
+
+### 标记任务完成
+
+```bash
+# 方式一：task-update（只改状态）
+node scripts/plans.mjs task-update --project dingtalk-digital-human --task-id t4-4-2 --status completed
+
+# 方式二：task-edit（同时改状态 + 结束日期）
+node scripts/plans.mjs task-edit --project dingtalk-digital-human --task-id t4-4-2 --status completed --end-date 2026-07-09
+```
+
+### 添加新任务
+
+```bash
+# 顶层任务（不加 --parent）
+node scripts/plans.mjs task-add --project my-project --title "新功能开发" --status active
+
+# 子任务（指定 --parent）
+node scripts/plans.mjs task-add --project my-project --parent t1 --title "调研竞品" --status planned
+```
+
+task-add 支持的可选字段：`--status`、`--start-date`、`--end-date`、`--start-time`、`--end-time`、`--location`、`--category`、`--description`
+
+### 编辑任务字段
+
+`task-edit` 可以一次修改多个字段：
+
+```bash
+node scripts/plans.mjs task-edit --project my-project --task-id t1-1 \
+  --title "新标题" \
+  --status completed \
+  --start-date 2026-07-01 \
+  --end-date 2026-07-09 \
+  --description "更新描述"
+```
+
+可编辑字段：`--title`、`--status`、`--start-date`、`--end-date`、`--start-time`、`--end-time`、`--location`、`--category`、`--description`
+
+日期字段传 `null` 可清空：`--end-date null`
+
+### 删除任务
+
+```bash
+# 无子任务：直接删除
+node scripts/plans.mjs task-delete --project my-project --task-id t1-1
+
+# 有子任务：需要 --force（会连带删除所有子任务）
+node scripts/plans.mjs task-delete --project my-project --task-id t1 --force
+```
+
+### 创建新项目
+
+```bash
+node scripts/plans.mjs project-create \
+  --slug my-new-project \
+  --title "项目名称" \
+  --category work \
+  --summary "一句话描述" \
+  --tags "标签1,标签2"
+```
+
+自动生成：
+- `content/projects/{slug}/README.md`（含 frontmatter + 时间线起点）
+- `content/projects/{slug}/tasks.json`（空任务树骨架）
+
+category 可选值：`work` | `research` | `side-project` | `learning`
+
+### 周期任务
+
+```bash
+# 添加周期任务
+node scripts/plans.mjs recurring-add --project lifeos --title "每日代码提交" \
+  --pattern daily --report-levels daily,weekly
+
+# 列出所有周期任务
+node scripts/plans.mjs recurring-list
+```
+
+---
+
+## 数据结构（供理解，日常用 CLI 即可）
+
+### 项目 Markdown (`content/projects/{slug}/README.md`)
 
 ```yaml
 ---
-title: 钉钉数字人
-slug: dingtalk-digital-human
-status: active                # active | completed | paused | planned
+title: 项目名
+slug: project-slug
+status: active          # active | completed | paused | planned
 startDate: 2026-06-01
 endDate: null
-category: work                # work | research | side-project | learning
-tags: [钉钉, 数字人]
+category: work          # work | research | side-project | learning
+tags: [标签1, 标签2]
 summary: 一句话描述
 timeline:
   - date: 2026-06-01
-    title: 入职
-    type: milestone           # milestone | progress | blocker | decision | note
+    title: 里程碑
+    type: milestone     # milestone | progress | blocker | decision | note
     description: 描述
 ---
-正文（可选）
 ```
 
 ### 任务树 JSON (`content/projects/{slug}/tasks.json`)
 
 ```json
 {
-  "project": "dingtalk-digital-human",
+  "project": "slug",
   "tasks": [
     {
       "id": "t1",
-      "title": "卡通数字人",
+      "title": "任务名",
       "status": "active",
       "startDate": "2026-07-01",
       "endDate": null,
-      "description": "相关算法、主观测试和客观指标测试",
-      "children": [
-        { "id": "t1-1", "title": "算法调研", "status": "active", "startDate": null, "endDate": null, "description": "", "children": [] }
-      ]
+      "description": "",
+      "children": [...]
     }
   ]
 }
 ```
 
-**Task 字段:**
+Task status 枚举：`active` | `completed` | `planned` | `blocked` | `paused`
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| id | string | Y | 唯一标识（如 t1, t1-1, t1-1-2）|
-| title | string | Y | 任务名称 |
-| status | enum | Y | `active` / `completed` / `planned` / `blocked` / `paused` |
-| startDate | string? | N | ISO 日期，有值则显示在日历 |
-| endDate | string? | N | ISO 日期 |
-| description | string? | N | 详细描述 |
-| children | Task[] | Y | 子任务（可为空数组）|
+---
 
-### 前端展示
+## 时间线事件
 
-- **Projects 页面** (`/projects`): 项目标签选择 → Git 风格任务树（展开/折叠子树、点击查看详情）→ 时间线 Tab
-- **Calendar 页面** (`/calendar`): 有 startDate 的任务以项目颜色显示为日历事件，点击可查看详情和子任务
-
-## CLI 脚本
-
-**路径**: `scripts/plans.mjs`
-
-### 任务树命令
-
-| 命令 | 说明 | 示例 |
-|------|------|------|
-| `tasks` | 列出任务树 | `node scripts/plans.mjs tasks --project dingtalk-digital-human` |
-| `task-update` | 更新任务状态 | `node scripts/plans.mjs task-update --project slug --task-id t1-1 --status completed` |
-| `task-add` | 添加子任务 | `node scripts/plans.mjs task-add --project slug --parent t1 --title "新任务" [--status active]` |
-
-### 其他命令
-
-| 命令 | 说明 |
-|------|------|
-| `projects` | 列出所有项目 `[--status active]` |
-| `daily/weekly/monthly/quarterly/annual` | 查看各级计划 |
-| `overview` | 综合概览 |
-
-## Agent 操作指南
-
-### 查看任务树
-
-```bash
-node scripts/plans.mjs tasks --project dingtalk-digital-human
-```
-
-### 更新任务状态
-
-```bash
-node scripts/plans.mjs task-update --project dingtalk-digital-human --task-id t3-1 --status completed
-```
-
-### 添加子任务
-
-```bash
-node scripts/plans.mjs task-add --project dingtalk-digital-human --parent t3 --title "新评测维度" --status planned
-```
-
-### 添加新项目
-
-1. 在 `content/projects/` 下创建 `{slug}.md`
-2. 在 `apps/web/public/` 下创建 `{slug}.tasks.json`
-
-### 添加时间线事件
-
-编辑对应项目 markdown 的 frontmatter，在 `timeline` 数组末尾追加：
+时间线写在项目 README.md 的 frontmatter `timeline` 数组里。添加时直接编辑 markdown 末尾追加：
 
 ```yaml
-  - date: 2026-07-06
-    title: 完成性能基准测试
+  - date: 2026-07-09
+    title: 完成某事
     type: progress
-    description: 在 RTX 4090 上达到 30fps 实时推理
+    description: 详细描述
 ```
 
-### 数据加载
+type 可选：`milestone` | `progress` | `blocker` | `decision` | `note`
 
-- **Markdown**: 通过 Velite 构建为 JSON，前端 `getAllProjects()` / `getProjectBySlug()` 读取
-- **任务树 JSON**: 放在 `apps/web/public/`，Vite 直接复制到 dist，前端 `getProjectTasks(slug)` 通过 fetch 加载
-- **日历集成**: Calendar 页面同时加载 events.json 和所有项目的 tasks.json，将有日期的任务显示为日历事件
+---
 
-## 已有项目
+## 前端展示
 
-- `dingtalk-digital-human.md` + `dingtalk-digital-human.tasks.json` — 钉钉数字人（active）
-- `lifeos.md` + `lifeos.tasks.json` — lifeOS 个人项目（active）
-- `infrared-contour-compression.md` + `infrared-contour-compression.tasks.json` — 红外轮廓图像压缩（active）
-- `pet-action-recognition.md` + `pet-action-recognition.tasks.json` — 宠物动作识别（active）
+- **Projects 页面** (`/projects`)：项目标签选择 → Git 风格任务树 → 时间线 Tab
+- **Calendar 页面** (`/calendar`)：有 startDate 的任务以项目颜色显示为日历事件
+- **数据加载**：Markdown 经 Velite 构建；tasks.json 放在 `content/projects/{slug}/` 下，前端通过 fetch 加载
 
 ## 注意事项
 
-1. **任务树 JSON 独立于 Velite** — 放在 `apps/web/public/` 而非 `content/`，不经过 Velite 构建
-2. **任务 ID 唯一性** — 同一项目内 task ID 必须唯一，建议用 `t1`, `t1-1`, `t1-1-2` 层级命名
-3. **有日期的任务显示在日历** — startDate 非空的任务会在 Calendar 页面显示
-4. **endDate 为 null 时** — 日历中显示为单日事件（startDate 当天）
-5. **修改后需 rebuild** — content/ 修改后需重新 build；public/ 下的 JSON 文件 Vite 直接复制，无需 rebuild
+1. **用 CLI，别手动编辑 JSON** — CLI 处理 ID 生成、格式、级联逻辑
+2. **任务 ID 层级命名** — `t1`、`t1-1`、`t1-1-2`，CLI 自动生成
+3. **有日期的任务显示在日历** — startDate 非空的任务会出现在 Calendar 页面
+4. **修改 content/ 后需 rebuild** — public/ 下的 JSON 文件 Vite 直接复制
+5. **task-edit vs task-update** — task-update 只改 status（快捷）；task-edit 改任意字段组合

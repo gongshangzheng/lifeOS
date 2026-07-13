@@ -247,7 +247,7 @@ function TagGroupCard({ group }: { group: TagGroup }) {
   const isMulti = habits.length > 1
 
   return (
-    <div className="lo-card p-4">
+    <div className="lo-card flex flex-col overflow-hidden p-4" style={{ height: '320px' }}>
       {/* Header: tag name + combined stats */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -270,7 +270,7 @@ function TagGroupCard({ group }: { group: TagGroup }) {
       </div>
 
       {/* Shared heatmap */}
-      <div className="mt-3">
+      <div className="mt-3 shrink-0">
         <TagHeatmap habits={habits} />
         <div className="mt-1 flex items-center justify-between text-[9px] text-placeholder">
           <span>30 天前</span>
@@ -296,7 +296,7 @@ function TagGroupCard({ group }: { group: TagGroup }) {
 
       {/* Individual habits (only when multiple) */}
       {isMulti && (
-        <div className="mt-4 max-h-32 overflow-y-auto border-t border-border pt-3">
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto border-t border-border pt-3">
           <div className="mb-2 text-[10px] uppercase tracking-wider text-dim">
             {activeDays} 天活跃 · {habits.length} 个习惯
           </div>

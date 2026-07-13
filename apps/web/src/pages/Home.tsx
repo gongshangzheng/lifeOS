@@ -189,27 +189,28 @@ function ContributionHeatmap() {
         </div>
         <div className="flex gap-0">
           {/* Day labels */}
-          <div className="flex flex-col gap-1 pr-1.5 pt-0.5">
+          <div className="flex flex-col gap-1.5 pr-1.5 pt-0.5">
             {DAY_LABELS.map((label, i) => (
-              <div key={i} className="h-3 text-[9px] leading-3 text-placeholder">
+              <div key={i} className="h-4 text-[9px] leading-4 text-placeholder">
                 {label}
               </div>
             ))}
           </div>
           {/* Grid */}
-          <div className="flex flex-1 gap-1">
+          <div className="flex flex-1 gap-1.5">
             {weeks.map((week, wi) => (
-              <div key={wi} className="flex flex-1 flex-col gap-1">
+              <div key={wi} className="flex flex-1 flex-col gap-1.5">
                 {Array.from({ length: 7 }, (_, di) => {
                   const day = week[di]
-                  if (!day) return <div key={di} className="h-3 w-full" />
+                  if (!day) return <div key={di} className="h-4 w-full" />
                   return (
-                    <div
+                    <Link
                       key={di}
-                      className={`h-3 w-full rounded-sm transition-colors ${
-                        day.hasReport ? 'bg-green-500' : 'bg-muted'
-                      } hover:ring-1 hover:ring-primary`}
-                      title={`${day.date}${day.hasReport ? ' ✓' : ''}`}
+                      to={day.hasReport ? `/report/daily/${day.date}` : '#'}
+                      className={`h-4 w-full rounded-sm transition-colors ${
+                        day.hasReport ? 'cursor-pointer bg-green-500 hover:ring-1 hover:ring-primary' : 'cursor-default bg-muted'
+                      }`}
+                      title={`${day.date}${day.hasReport ? ' — 点击查看日报' : ' — 无日报'}`}
                     />
                   )
                 })}
@@ -334,10 +335,10 @@ export function Home() {
       </header>
 
       {/* Heatmap + Active projects */}
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px] items-start">
         <ContributionHeatmap />
         {activeProjects.length > 0 && (
-          <div className="lo-card h-full p-4">
+          <div className="lo-card overflow-y-auto p-4" style={{ maxHeight: '255.56px' }}>
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-dim">
                 活跃项目

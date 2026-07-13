@@ -151,7 +151,22 @@
           "category": "social",
           "description": "与吴赟阳同步宠物动作识别项目各路线调研进展，讨论下一步重点方向",
           "assignee": "吴赟阳",
-          "children": []
+          "children": [
+            {
+              "id": "t2-4-1",
+              "title": "周六专项会议：确定宠物动作识别下一步方向",
+              "status": "planned",
+              "startDate": "2026-07-11",
+              "endDate": null,
+              "startTime": "09:00",
+              "endTime": "10:00",
+              "location": "线上",
+              "category": "work",
+              "description": "与吴赟阳开会，基于 Phase 1/2 调研结果，确定宠物动作识别下一步重点方案与分工",
+              "assignee": "吴赟阳",
+              "children": []
+            }
+          ]
         }
       ]
     }
